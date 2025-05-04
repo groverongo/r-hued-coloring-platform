@@ -6,10 +6,7 @@ function ExportAsLaTeX() {
     this.strokeStyle = "black";
 
     this.toLaTeX = function () {
-        return '\\documentclass[12pt]{article}\n' +
-            '\\usepackage{tikz}\n' +
-            '\n' +
-            '\\begin{document}\n' +
+        return '\\usepackage{tikz}\n' +
             '\n' +
             '\\begin{center}\n' +
             '\\begin{tikzpicture}[scale=0.2]\n' +
@@ -17,8 +14,6 @@ function ExportAsLaTeX() {
             this._texData +
             '\\end{tikzpicture}\n' +
             '\\end{center}\n' +
-            '\n' +
-            '\\end{document}\n';
     };
 
     this.beginPath = function () {
