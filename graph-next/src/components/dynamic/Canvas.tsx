@@ -3,10 +3,10 @@ import NodeC from "@/classes/node";
 import SelfLink from "@/classes/self_link";
 import StartLink from "@/classes/start_link";
 import { TemporaryLink } from "@/classes/temporary_link";
-import { caretTimerAtom, caretVisibleAtom, currentLinkAtom, inCanvasAtom, jsonEditorAtom, linksAtom, movingObjectAtom, nodesAtom, originalClickAtom, selectedObjectAtom, shiftAtom, themeAtom } from "@/common/atoms";
+import { caretTimerAtom, currentLinkAtom, jsonEditorAtom, linksAtom, nodesAtom, selectedObjectAtom, themeAtom } from "@/common/atoms";
 import { SNAP_TO_PADDING } from "@/common/constant";
 import { CANVAS_ACTIONS, CANVAS_CONDITIONS } from "@/common/messages";
-import { useCanvasRef } from "@/common/refs";
+import { useCanvasRef, useOperationFlagsRef } from "@/common/refs";
 import { crossBrowserRelativeMousePos, draw, uniqueId } from "@/common/utilities";
 import { useAtom, useAtomValue } from "jotai";
 import { useSetAtom } from "jotai";
@@ -19,28 +19,25 @@ export default function Canvas(){
     const [nodes, setNodes] = useAtom(nodesAtom);
     const links = useAtomValue(linksAtom);
     const [currentLink, setCurrentLink] = useAtom(currentLinkAtom)
-    const originalClick = useAtomValue(originalClickAtom)
-    const [movingObject, setMovingObject] = useAtom(movingObjectAtom);
     const editor = useAtomValue(jsonEditorAtom);
-    const setInCanvas = useSetAtom(inCanvasAtom);
-    const setOriginalClick = useSetAtom(originalClickAtom);
     const [valueLinks, setLinks] = useAtom(linksAtom);
-    const [shift, setShift] = useAtom(shiftAtom)
-    const inCanvas = useAtomValue(inCanvasAtom);
     const [caretTimer, setCaretTimer] = useAtom(caretTimerAtom);
-    const [caretVisible, setCaretVisible] = useAtom(caretVisibleAtom);
     const theme = useAtomValue(themeAtom);
     const setJsonEditor = useSetAtom(jsonEditorAtom);
-    const styleProps = useRef<CSSProperties>({});
+    const [styleProps, setStyleProps] = useState<CSSProperties>({});
+    
+    const movingObjectRef = useRef(false);
+    const originalClickRef = useRef<{x:number, y:number}>(undefined)
+    const {shiftRef, inCanvasRef, caretVisibleRef} = useOperationFlagsRef();
 
     const deltaMouseX = useRef<number>(null);
     const deltaMouseY = useRef<number>(null);
 
     useEffect(() => {
-        styleProps.current = {
+        setStyleProps({
             height: `${700}px`,
             width: `${1200 * screen.width / 2000}px`,
-        }
+        })
     }, []);
 
     useEffect(() => {
@@ -56,15 +53,15 @@ export default function Canvas(){
             if(canvas === null) return;
             const context = canvas.getContext("2d");
             if(context === null) return;
-            setCaretVisible(!caretVisible);
-            draw(canvas, context, nodes, links, currentLink, theme, selectedObject, caretVisible, inCanvas, setJsonEditor);
+            caretVisibleRef.current = !caretVisibleRef.current;
+            draw(canvas, context, nodes, links, currentLink, theme, selectedObject, caretVisibleRef.current, inCanvasRef.current, setJsonEditor);
         }
 
         clearInterval(caretTimer);
 
         setCaretTimer(setInterval(handler, 500));
         
-        setCaretVisible(true);
+        caretVisibleRef.current = true;
     }
 
     function selectObject(x: number, y: number) {
@@ -116,7 +113,7 @@ export default function Canvas(){
         }
 
         const mouse = crossBrowserRelativeMousePos(e);
-        setInCanvas(true);
+        inCanvasRef.current = true;
 
         // if selectedObject is not null than save the json of the editor into the node
         const json = editor;
@@ -125,16 +122,16 @@ export default function Canvas(){
         }
 
 
-        setMovingObject(false);
-        setOriginalClick(mouse);
+        movingObjectRef.current = false;
+        originalClickRef.current = mouse;
 
         setSelectedObject(selectObject(mouse.x, mouse.y));
         if (selectedObject != null) {
 
-            if (shift && selectedObject instanceof NodeC) {
+            if (shiftRef.current && selectedObject instanceof NodeC) {
                 setCurrentLink(new SelfLink(selectedObject, mouse));
             } else {
-                setMovingObject(true);
+                movingObjectRef.current = true;
                 deltaMouseX.current = deltaMouseY.current = 0;
                 if (selectedObject instanceof NodeC ) {
                     selectedObject.setMouseStart(mouse.x, mouse.y);
@@ -143,13 +140,13 @@ export default function Canvas(){
                 } 
             }
             resetCaret();
-        } else if (shift) {
+        } else if (shiftRef.current) {
             setCurrentLink(new TemporaryLink(new NodeC(mouse.x, mouse.y), new NodeC(mouse.x, mouse.y)));
         }
 
-        draw(canvas, context, nodes, links, currentLink, theme, selectedObject, caretVisible, inCanvas, setJsonEditor);
+        draw(canvas, context, nodes, links, currentLink, theme, selectedObject, caretVisibleRef.current, inCanvasRef.current, setJsonEditor);
 
-        if (inCanvas) {
+        if (inCanvasRef.current) {
             // disable drag-and-drop only if the canvas is already focused
             console.log(CANVAS_ACTIONS.MOUSE_DOWN.end);
             return false;
@@ -188,12 +185,12 @@ export default function Canvas(){
             setNodes([...nodes, newObject])
             resetCaret();
             if(canvasRef.current === null) return
-            draw(canvas, context, nodes, links, currentLink, theme, selectedObject, caretVisible, inCanvas, setJsonEditor);
+            draw(canvas, context, nodes, links, currentLink, theme, selectedObject, caretVisibleRef.current, inCanvasRef.current, setJsonEditor);
         } else if (selectedObject instanceof NodeC) {
             selectedObject.isAcceptState = !selectedObject.isAcceptState;
             setSelectedObject(selectedObject);
             if (selectedObject.isAcceptState){
-                draw(canvas, context, nodes, links, currentLink, theme, selectedObject, caretVisible, inCanvas, setJsonEditor);
+                draw(canvas, context, nodes, links, currentLink, theme, selectedObject, caretVisibleRef.current, inCanvasRef.current, setJsonEditor);
             }
         }
 
@@ -227,14 +224,14 @@ export default function Canvas(){
 
             if (selectedObject == null) {
                 if (targetNode != null) {
-                    originalClick && setCurrentLink(new StartLink(targetNode, originalClick));
+                    originalClickRef.current && setCurrentLink(new StartLink(targetNode, originalClickRef.current));
                 } else {
-                    originalClick && setCurrentLink(new TemporaryLink(new NodeC(originalClick.x, originalClick.y), new NodeC(mouse.x, mouse.y)));
+                    originalClickRef.current && setCurrentLink(new TemporaryLink(new NodeC(originalClickRef.current.x, originalClickRef.current.y), new NodeC(mouse.x, mouse.y)));
                 }
             } else {
                 if (targetNode === selectedObject) {
                     setCurrentLink(new SelfLink(selectedObject, mouse));
-                } else if (targetNode != null) {
+                } else if (targetNode !== null) {
                     if(selectedObject instanceof NodeC)
                         setCurrentLink(new Link(selectedObject, targetNode));
                 } else {
@@ -244,15 +241,15 @@ export default function Canvas(){
                     }
                 }
             }
-            draw(canvas, context, nodes, links, currentLink, theme, selectedObject, caretVisible, inCanvas, setJsonEditor);
+            draw(canvas, context, nodes, links, currentLink, theme, selectedObject, caretVisibleRef.current, inCanvasRef.current, setJsonEditor);
         }
         
-        if (movingObject && selectedObject !== null) {
+        if (movingObjectRef.current && selectedObject !== null) {
             selectedObject.setAnchorPoint(mouse.x, mouse.y);
             if (selectedObject instanceof NodeC) {
                 setSelectedObject(snapNode(selectedObject));
             }
-            draw(canvas, context, nodes, links, currentLink, theme, selectedObject, caretVisible, inCanvas, setJsonEditor);
+            draw(canvas, context, nodes, links, currentLink, theme, selectedObject, caretVisibleRef.current, inCanvasRef.current, setJsonEditor);
         }
 
         console.log(CANVAS_ACTIONS.MOUSE_MOVE.end);
@@ -274,7 +271,7 @@ export default function Canvas(){
             return;
         }
 
-        setMovingObject(false);
+        movingObjectRef.current = false;
 
         if (currentLink != null) {
             if (!(currentLink instanceof TemporaryLink)) {
@@ -284,9 +281,9 @@ export default function Canvas(){
                 resetCaret();
             }
             setCurrentLink(null);
-            draw(canvas, context, nodes, links, currentLink, theme, selectedObject, caretVisible, inCanvas, setJsonEditor);
+            draw(canvas, context, nodes, links, currentLink, theme, selectedObject, caretVisibleRef.current, inCanvasRef.current, setJsonEditor);
         }
-        setShift(false)
+        shiftRef.current = false;
 
         console.log(CANVAS_ACTIONS.MOUSE_UP.end);
     };
@@ -296,7 +293,7 @@ export default function Canvas(){
             className="rounded bg-white shadow-lg" 
             ref={canvasRef}
             id="canvas"
-            style={styleProps.current}
+            style={styleProps}
             onMouseDown={onMouseDown}
             onMouseMove={onMouseMove}
             onDoubleClick={onDoubleClick}

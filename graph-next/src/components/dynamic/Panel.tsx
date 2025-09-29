@@ -1,18 +1,18 @@
-import { inCanvasAtom, inPanelAtom } from "@/common/atoms";
+import { useOperationFlagsRef } from "@/common/refs";
 import { useSetAtom } from "jotai";
-import { CSSProperties, MouseEventHandler } from "react";
+import { CSSProperties, MouseEventHandler, useState } from "react";
 
 export default function Panel(){
 
-    const setInCanvas = useSetAtom(inCanvasAtom);
-    const setInPanel = useSetAtom(inPanelAtom);
+    const {inCanvasRef} = useOperationFlagsRef();
+    const [inPanel, setInPanel] = useState(false);
 
     const styleProps: CSSProperties = {
         width: `${400 * screen.width / 2000}px`
     }
 
     const onMouseDown: MouseEventHandler<HTMLDivElement> = (e) => {
-        setInCanvas(false);
+        inCanvasRef.current = false;
         setInPanel(true);
     }
 

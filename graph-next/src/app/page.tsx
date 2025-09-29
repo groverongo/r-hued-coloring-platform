@@ -5,8 +5,8 @@ import NodeC from "@/classes/node";
 import SelfLink from "@/classes/self_link";
 import StartLink from "@/classes/start_link";
 import { TemporaryLink } from "@/classes/temporary_link";
-import { caretTimerAtom, caretVisibleAtom, currentLinkAtom, inCanvasAtom, jsonEditorAtom, linksAtom, nodesAtom, screenRatioAtom, selectedObjectAtom, shiftAtom, themeAtom } from "@/common/atoms";
-import { CanvasRefContext } from "@/common/refs";
+import { caretTimerAtom, currentLinkAtom, jsonEditorAtom, linksAtom, nodesAtom, screenRatioAtom, selectedObjectAtom, themeAtom } from "@/common/atoms";
+import { CanvasRefContext, OperationFlagsRefContext } from "@/common/refs";
 import { draw } from "@/common/utilities";
 import { GraphBoard } from "@/components/layout/GraphBoard";
 import { IO } from "@/components/layout/IO";
@@ -16,18 +16,19 @@ import { useEffect, useRef } from "react";
 export default function Home() {
   
   const setScreenRatio = useSetAtom(screenRatioAtom);
-  const [shift, setShift] = useAtom(shiftAtom);
-  const inCanvas = useAtomValue(inCanvasAtom);
   const [selectedObject, setSelectedObject] = useAtom(selectedObjectAtom);
   const nodes = useAtomValue(nodesAtom);
   const links = useAtomValue(linksAtom);
   const [caretTimer, setCaretTimer] = useAtom(caretTimerAtom);
-  const [caretVisible, setCaretVisible] = useAtom(caretVisibleAtom);
   const currentLink = useAtomValue(currentLinkAtom);
   const theme = useAtomValue(themeAtom);
   const setJsonEditor = useSetAtom(jsonEditorAtom);
 
   const canvasRef = useRef<HTMLCanvasElement|null>(null);
+
+  const shiftRef = useRef<boolean>(false);
+  const inCanvasRef = useRef<boolean>(false);
+  const caretVisibleRef = useRef<boolean>(true);
   
 
   function resetCaret() {
@@ -37,20 +38,20 @@ export default function Home() {
           if(canvas === null) return;
           const context = canvas.getContext("2d");
           if(context === null) return;
-          setCaretVisible(!caretVisible);
-          draw(canvas, context, nodes, links, currentLink, theme, selectedObject, caretVisible, inCanvas, setJsonEditor);
+          caretVisibleRef.current = !caretVisibleRef.current;
+          draw(canvas, context, nodes, links, currentLink, theme, selectedObject, caretVisibleRef.current, inCanvasRef.current, setJsonEditor);
       }
 
       clearInterval(caretTimer);
 
       setCaretTimer(setInterval(handler, 500));
       
-      setCaretVisible(true);
+      caretVisibleRef.current = true;
   }
 
   const onKeyUp: ((this: Document, ev: KeyboardEvent) => any) = (ev) => {
     if(ev.shiftKey)
-      setShift(false);
+      shiftRef.current = false;
   }
 
   const onKeyDown: ((this: Document, ev: KeyboardEvent) => any) = (ev) => {
@@ -62,8 +63,8 @@ export default function Home() {
     if(context === null) return;
 
     if (ev.shiftKey) {
-        setShift(true);
-    } else if (!inCanvas) {
+        shiftRef.current = true;
+    } else if (!inCanvasRef.current) {
         // don't read keystrokes when other things have focus
         return true;
     } else if (key === "Backspace") { // backspace key
@@ -74,7 +75,7 @@ export default function Home() {
             return prev;
           })
           resetCaret();
-          draw(canvas, context, nodes, links, currentLink, theme, selectedObject, caretVisible, inCanvas, setJsonEditor);
+          draw(canvas, context, nodes, links, currentLink, theme, selectedObject, caretVisibleRef.current, inCanvasRef.current, setJsonEditor);
           return true;
         }
 
@@ -94,12 +95,12 @@ export default function Home() {
           }
         }
         setSelectedObject(null);
-        draw(canvas, context, nodes, links, currentLink, theme, selectedObject, caretVisible, inCanvas, setJsonEditor);
+        draw(canvas, context, nodes, links, currentLink, theme, selectedObject, caretVisibleRef.current, inCanvasRef.current, setJsonEditor);
         return true;
       }
     }
 
-    if (shift && key.includes("Arrow") && selectedObject) {
+    if (shiftRef.current && key.includes("Arrow") && selectedObject) {
         if (key === "ArrowUp") {
             ev.preventDefault()
             setSelectedObject(prev => {
@@ -110,8 +111,7 @@ export default function Home() {
               }
               return prev;
             });
-        }
-        if (key === "ArrowDown") {
+        } else if (key === "ArrowDown") {
             ev.preventDefault()
             setSelectedObject(prev => {
               if(prev instanceof NodeC){
@@ -121,16 +121,14 @@ export default function Home() {
               }
               return prev;
             });
-        }
-        if (key === "ArrowRight") {
+        } else if (key === "ArrowRight") {
             ev.preventDefault()
             setSelectedObject(prev => {
               if(prev instanceof TemporaryLink || prev === null) return prev;
               prev.fontSize += 2.5;
               return prev;
             });
-        }
-        if (key === "ArrowLeft") {
+        } else if (key === "ArrowLeft") {
             ev.preventDefault()
             setSelectedObject(prev => {
               if(prev instanceof TemporaryLink || prev === null) return prev;
@@ -143,28 +141,28 @@ export default function Home() {
         return true
     }
 
-    if (shift && key === "L") {
+    if (shiftRef.current && key === "L") {
         // open confirm modal
         throw Error("NOT IMPLEMENTED")
         confirmWindow.show()
     }
 
     if (!ev.metaKey && !ev.altKey && !ev.ctrlKey && ev.key !== "Tab" && selectedObject !== null) {
-      if (key === "Shift" && inCanvas) {
+      if (key === "Shift" && inCanvasRef.current) {
         return true
       }
 
-      if (key === "Enter" && inCanvas) {
+      if (key === "Enter" && inCanvasRef.current) {
         setSelectedObject(prev => {
           if(prev instanceof TemporaryLink || prev === null) return prev;
           prev.text += '\n';
           return prev;
         });
         resetCaret()
-        draw(canvas, context, nodes, links, currentLink, theme, selectedObject, caretVisible, inCanvas, setJsonEditor);
+        draw(canvas, context, nodes, links, currentLink, theme, selectedObject, caretVisibleRef.current, inCanvasRef.current, setJsonEditor);
         return true
       }
-      if (key === " " && inCanvas) {
+      if (key === " " && inCanvasRef.current) {
         ev.preventDefault()
       }
       if (key.length === 1) {
@@ -174,7 +172,7 @@ export default function Home() {
           return prev;
         });
         resetCaret();
-        draw(canvas, context, nodes, links, currentLink, theme, selectedObject, caretVisible, inCanvas, setJsonEditor);
+        draw(canvas, context, nodes, links, currentLink, theme, selectedObject, caretVisibleRef.current, inCanvasRef.current, setJsonEditor);
         return true
       }
       return true
@@ -182,11 +180,11 @@ export default function Home() {
   }
 
   useEffect(() => {
-    setScreenRatio(screen.width / 2000);
     const canvas = canvasRef.current;
     if (canvas === null) return;
     const ctx = canvas.getContext("2d");
     if (ctx === null) return;
+    setScreenRatio(screen.width / 2000);
   }, []);
 
   useEffect(() => {
@@ -202,8 +200,10 @@ export default function Home() {
   return (
     <div>
       <CanvasRefContext.Provider value={canvasRef}>
-        <GraphBoard/>
-        <IO/>
+        <OperationFlagsRefContext.Provider value={{shiftRef, inCanvasRef, caretVisibleRef}}>
+          <GraphBoard/>
+          <IO/>
+        </OperationFlagsRefContext.Provider>
       </CanvasRefContext.Provider>
     </div>
   );

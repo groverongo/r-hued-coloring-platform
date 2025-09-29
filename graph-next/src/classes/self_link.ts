@@ -12,7 +12,7 @@ export default class SelfLink {
     fontSize: number;
     json_model: any;
 
-    constructor(node: NodeC, mouse: any) {
+    constructor(node: NodeC, mouse: {x: number, y: number}) {
         this.node = node;
         this.anchorAngle = 0;
         this.mouseOffsetAngle = 0;

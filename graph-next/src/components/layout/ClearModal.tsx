@@ -1,4 +1,5 @@
-import { currentLinkAtom, inCanvasAtom, linksAtom, nodesAtom, themeAtom } from "@/common/atoms";
+import { currentLinkAtom, linksAtom, nodesAtom, themeAtom } from "@/common/atoms";
+import { useOperationFlagsRef } from "@/common/refs";
 import { useAtom, useAtomValue } from "jotai";
 import { MouseEventHandler } from "react";
 
@@ -8,7 +9,7 @@ export default function ClearModal(){
     const [links, setlinks] = useAtom(linksAtom);
     const currentLink = useAtomValue(currentLinkAtom);
     const theme = useAtomValue(themeAtom);
-    const inCanvas = useAtomValue(inCanvasAtom);
+    const {inCanvasRef} = useOperationFlagsRef();
 
     function clearCanvas(){
         setNodes([]);

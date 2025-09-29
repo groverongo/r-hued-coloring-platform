@@ -5,12 +5,11 @@ import NodeC from "@/classes/node";
 import SelfLink from "@/classes/self_link";
 import LinkC from "@/classes/link";
 import StartLink from "@/classes/start_link";
-import Link from "next/link";
 
 export const uniqueId = () => {
     const dateString = Date.now().toString(36);
     const randomness = Math.random().toString(36).slice(2);
-    return dateString + randomness;
+    return `${dateString}_${randomness}`;
 };
 
 export function crossBrowserElementPos(e: MouseEvent) {
