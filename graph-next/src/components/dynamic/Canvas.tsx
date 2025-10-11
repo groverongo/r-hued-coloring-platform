@@ -1,6 +1,7 @@
 import { NodeGRef } from "@/classes/node";
 import {
   CSSProperties,
+  FocusEventHandler,
   KeyboardEventHandler,
   useEffect,
   useRef,
@@ -45,13 +46,17 @@ export default function Canvas() {
     y: number;
   } | null>(null);
 
+  const onBlur: FocusEventHandler<HTMLDivElement> = (e) => {
+    setKeyDownUnblock(true);
+    setShiftPressed(false);
+  };
+
   const onKeyUp: KeyboardEventHandler<HTMLDivElement> = (e) => {
     setKeyDownUnblock(true);
     if (e.key === "Shift") setShiftPressed(false);
   };
 
   const onKeyDown: KeyboardEventHandler<HTMLDivElement> = (e) => {
-    console.log(e.key);
     if (keyDownUnblock) setKeyDownUnblock(false);
 
     if (e.key === "Shift") {
@@ -122,7 +127,7 @@ export default function Canvas() {
   }, [nodesInfo.length]);
 
   return (
-    <div onKeyDown={onKeyDown} onKeyUp={onKeyUp} tabIndex={0}>
+    <div onKeyDown={onKeyDown} onKeyUp={onKeyUp} onBlur={onBlur} tabIndex={0}>
       <Stage
         id="KonvaStage"
         style={styleProps}

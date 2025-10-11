@@ -79,15 +79,10 @@ export default function NodeG({
     <Group
       ref={GroupRef}
       onClick={() => {
-        console.log(isSelected);
         setIsSelected(!isSelected);
       }}
       onDragStart={() => {
         setIsSelected(true);
-      }}
-      onDragEnd={(e) => {
-        console.log("initial", x, y);
-        console.log("final", e.target.x(), e.target.y());
       }}
       draggable={draggable}
     >
