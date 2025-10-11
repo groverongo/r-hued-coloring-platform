@@ -1,8 +1,10 @@
 import {
   linkCurrentIndexAtom,
-  linksAtom, linksInfoAtom, nodeCurrentIndexAtom, nodesInfoAtom
+  linksInfoAtom,
+  nodeCurrentIndexAtom,
+  nodesInfoAtom,
 } from "@/common/atoms";
-import { useAtom, useSetAtom } from "jotai";
+import { useSetAtom } from "jotai";
 import { MouseEventHandler, useEffect, useState } from "react";
 import { Dialog } from "radix-ui";
 import { useElementRef } from "@/common/refs";
@@ -22,7 +24,7 @@ export const DialogDemo = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const {nodesRefs, linksRefs} = useElementRef();
+  const { nodesRefs, linksRefs } = useElementRef();
 
   const setNodesInfo = useSetAtom(nodesInfoAtom);
   const setLinksInfo = useSetAtom(linksInfoAtom);
@@ -35,7 +37,7 @@ export const DialogDemo = () => {
     setNodeCurrentIndex(null);
     setLinkCurrentIndex(null);
     nodesRefs.current = [];
-    linksRefs.current = []; 
+    linksRefs.current = [];
     // draw(undefined, undefined, nodes, links, currentLink, theme, selectedObjectAtom, caretVisibleAtom, inCanvas)
   }
 
@@ -45,8 +47,7 @@ export const DialogDemo = () => {
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
-      <Dialog.Trigger asChild>
-      </Dialog.Trigger>
+      <Dialog.Trigger asChild></Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="DialogOverlay" />
         <Dialog.Content className="DialogContent">
