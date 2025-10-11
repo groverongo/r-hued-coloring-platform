@@ -24,6 +24,8 @@ export default function Canvas() {
     setStyleProps({
       height: 700,
       width: (1200 * screen.width) / 2000,
+      border: "3px solid black",
+      borderRadius: "15px",
     });
   }, []);
 
