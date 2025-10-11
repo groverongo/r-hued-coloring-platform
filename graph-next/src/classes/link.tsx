@@ -2,7 +2,7 @@
 import { Ref, useEffect, useImperativeHandle, useState } from "react";
 import { Line } from "react-konva";
 
-export type LinkGProps = {
+export type LinkGRef = {
     fromIndex: number;
     toIndex: number;
     isSelected: boolean;
@@ -22,7 +22,7 @@ export default function LinkG({
     toIndex: number;
     from: {x: number, y: number};
     to: {x: number, y: number};
-    ref?: Ref<LinkGProps>;
+    ref?: Ref<LinkGRef>;
     onSelect?: () => void;
 }) {
 

@@ -21,3 +21,7 @@ export const caretTimerAtom = atom<number>();
 export const confirmWindowAtom = atom<bootstrap.Modal>();
 
 export const jsonEditorAtom = atom<object>({"name": "exampleName", "outputs": { "output1": "string_val1", "output2": 2 }, "isAcceptState": false});
+
+export const nodesInfoAtom = atom<{ x: number; y: number }[]>([]);
+
+export const linksInfoAtom = atom<{ fromIndex: number; toIndex: number }[]>([]);

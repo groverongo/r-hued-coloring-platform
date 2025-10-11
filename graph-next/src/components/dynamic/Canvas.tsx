@@ -9,9 +9,12 @@ import {
 import { Layer, Stage } from "react-konva";
 import NodeG from "@/classes/node";
 import TemporaryLinkG from "@/classes/temporary_link";
-import LinkG, { LinkGProps } from "@/classes/link";
+import LinkG, { LinkGRef } from "@/classes/link";
 import { NODE_G_MODES } from "@/common/constant";
 import { isIntString } from "@/common/utilities";
+import { useElementRef } from "@/common/refs";
+import { useAtom } from "jotai";
+import { linksInfoAtom, nodesInfoAtom } from "@/common/atoms";
 
 export default function Canvas() {
   const [styleProps, setStyleProps] = useState<CSSProperties>({});
@@ -23,13 +26,11 @@ export default function Canvas() {
     });
   }, []);
 
-  const [nodesInfo, setNodesInfo] = useState<{ x: number; y: number }[]>([]);
-  const nodesRefs = useRef<(NodeGRef | null)[]>([]);
+  const { nodesRefs, linksRefs } = useElementRef();
 
-  const [linksInfo, setLinksInfo] = useState<
-    { fromIndex: number; toIndex: number }[]
-  >([]);
-  const linksRefs = useRef<(LinkGProps | null)[]>([]);
+  const [nodesInfo, setNodesInfo] = useAtom(nodesInfoAtom);
+
+  const [linksInfo, setLinksInfo] = useAtom(linksInfoAtom);
 
   const [nodeMode, setNodeMode] = useState<number>(0);
   const [nodeCurrentIndex, setNodeCurrentIndex] = useState<number | null>(null);
@@ -79,7 +80,7 @@ export default function Canvas() {
         nodesRefs.current.splice(nodeCurrentIndex, 1);
         nodesInfo.splice(nodeCurrentIndex, 1);
         setNodeCurrentIndex(null);
-      } else if (e.key === "Tab") {
+      } else if (e.key === "Control") {
         setNodeMode((prev) => (prev + 1) % NODE_G_MODES.length);
       }
     } else if (linkCurrentIndex !== null) {

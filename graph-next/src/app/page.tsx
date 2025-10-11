@@ -1,7 +1,7 @@
 "use client";
 
-import LinkC from "@/classes/link";
-import NodeC from "@/classes/node";
+import LinkC, { LinkGRef } from "@/classes/link";
+import NodeC, { NodeGRef } from "@/classes/node";
 import SelfLink from "@/classes/self_link";
 import StartLink from "@/classes/start_link";
 // import { TemporaryLink } from "@/classes/temporary_link";
@@ -270,10 +270,14 @@ export default function Home() {
     };
   }, []);
 
+  const nodesRefs = useRef<(NodeGRef | null)[]>([]);
+
+  const linksRefs = useRef<(LinkGRef | null)[]>([]);
+
   return (
     <div>
       <ElementRefContext.Provider
-        value={{ canvasRef }}
+        value={{ canvasRef, nodesRefs, linksRefs }}
       >
         <OperationFlagsRefContext.Provider
           value={{ shiftRef, inCanvasRef, caretVisibleRef }}

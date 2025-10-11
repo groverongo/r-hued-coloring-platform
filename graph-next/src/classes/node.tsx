@@ -12,6 +12,8 @@ import { Circle, Group, Text } from "react-konva";
 export type NodeGRef = {
   x: number;
   y: number;
+  text: string;
+  colorIndex: number | null;
   isSelected: boolean;
   select: () => void;
   deselect: () => void;
@@ -45,6 +47,8 @@ export default function NodeG({
   useImperativeHandle(ref, () => ({
     x: GroupRef.current ? GroupRef.current.x() + x : x,
     y: GroupRef.current ? GroupRef.current.y() + y : y,
+    text: text,
+    colorIndex: colorIndex,
     isSelected: isSelected,
     select: () => {
       setIsSelected(true);
@@ -79,7 +83,6 @@ export default function NodeG({
         setIsSelected(!isSelected);
       }}
       onDragStart={() => {
-        if (isSelected) return;
         setIsSelected(true);
       }}
       onDragEnd={(e) => {
@@ -99,7 +102,7 @@ export default function NodeG({
             : "black"
         }
       />
-      <Text text={text} x={x} y={y} fontSize={FONT_SIZE} fill="black" />
+      <Text text={text} x={x-5*text.length} y={y-10} fontSize={FONT_SIZE} fill="black" />
     </Group>
   );
 }
