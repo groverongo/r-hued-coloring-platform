@@ -26,7 +26,7 @@ export default function Canvas() {
     });
   }, []);
 
-  const { nodesRefs, linksRefs } = useElementRef();
+  const {nodesRefs, linksRefs, stageRef} = useElementRef();
 
   const [nodesInfo, setNodesInfo] = useAtom(nodesInfoAtom);
 
@@ -128,6 +128,7 @@ export default function Canvas() {
         style={styleProps}
         width={styleProps.width as number}
         height={styleProps.height as number}
+        ref={stageRef}
         onDblClick={(e) => {
           if (!keyDownUnblock) return;
 

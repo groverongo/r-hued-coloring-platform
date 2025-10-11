@@ -1,12 +1,21 @@
 "use client"
 
+import { useElementRef } from "@/common/refs";
+
 export function IO() {
+
+    const {stageRef} = useElementRef();
+
     const saveAsLaTeX = (e: React.MouseEvent) => {
         console.error("saveAsLaTeX not implemented")
     }
-
+    
     const saveAsPNG = (e: React.MouseEvent) => {
-        console.error("saveAsPNG not implemented")
+        if(stageRef.current === null) return;
+        stageRef.current.toBlob({mimeType: 'image/png'}).then(blob => {
+            navigator.clipboard.write([new ClipboardItem({'image/png': blob as Blob})])
+        })
+        console.log("Copied to clipboard  \t\t😊")
     }
 
     const saveAsJson = (e: React.MouseEvent) => {

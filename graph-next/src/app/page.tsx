@@ -21,6 +21,7 @@ import { DialogDemo } from "@/components/layout/ClearModal";
 import { GraphBoard } from "@/components/layout/GraphBoard";
 import { IO } from "@/components/layout/IO";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import Konva from "konva";
 import { useCallback, useEffect, useRef } from "react";
 
 export default function Home() {
@@ -33,40 +34,13 @@ export default function Home() {
   const theme = useAtomValue(themeAtom);
   const setJsonEditor = useSetAtom(jsonEditorAtom);
 
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const stageRef = useRef<Konva.Stage | null>(null);
   const confirmWindowRef = useRef<HTMLDivElement | null>(null);
 
   const shiftRef = useRef<boolean>(false);
   const inCanvasRef = useRef<boolean>(false);
   const caretVisibleRef = useRef<boolean>(true);
-
-  function resetCaret() {
-    const handler: Function = () => {
-      const canvas = canvasRef.current;
-      if (canvas === null) return;
-      const context = canvas.getContext("2d");
-      if (context === null) return;
-      caretVisibleRef.current = !caretVisibleRef.current;
-      draw(
-        canvas,
-        context,
-        nodes,
-        links,
-        currentLink,
-        theme,
-        selectedObject,
-        caretVisibleRef.current,
-        inCanvasRef.current,
-        setJsonEditor
-      );
-    };
-
-    clearInterval(caretTimer);
-
-    setCaretTimer(setInterval(handler, 500));
-
-    caretVisibleRef.current = true;
-  }
+  const canvas: any = {}
 
   const onKeyUp = useCallback((ev: KeyboardEvent) => {
     if (ev.shiftKey) shiftRef.current = false;
@@ -75,10 +49,6 @@ export default function Home() {
   const onKeyDown = useCallback((ev: KeyboardEvent) => {
     const key = ev.key;
 
-    const canvas = canvasRef.current;
-    if (canvas === null) return;
-    const context = canvas.getContext("2d");
-    if (context === null) return;
 
     if (ev.shiftKey) {
       shiftRef.current = true;
@@ -114,44 +84,7 @@ export default function Home() {
 
       // backspace is a shortcut for the back button, but do NOT want to change pages
       return false;
-    } else if (key === "Backspace" || key === "Delete") {
-      // delete key
-      if (selectedObject != null) {
-        for (let i = 0; i < nodes.length; i++) {
-          if (nodes[i] === selectedObject) {
-            nodes.splice(i--, 1);
-          }
-        }
-        for (let i = 0; i < links.length; i++) {
-          const link = links[i];
-          if (
-            link === selectedObject ||
-            (link instanceof LinkC &&
-              (link.nodeA === selectedObject ||
-                link.nodeB === selectedObject)) ||
-            ((link instanceof StartLink || link instanceof SelfLink) &&
-              link.node === selectedObject)
-          ) {
-            links.splice(i--, 1);
-          }
-        }
-        setSelectedObject(null);
-        draw(
-          canvas,
-          context,
-          nodes,
-          links,
-          currentLink,
-          theme,
-          selectedObject,
-          caretVisibleRef.current,
-          inCanvasRef.current,
-          setJsonEditor
-        );
-        return true;
-      }
-    }
-
+    } 
     if (shiftRef.current && key.includes("Arrow") && selectedObject) {
       if (key === "ArrowUp") {
         ev.preventDefault();
@@ -254,20 +187,12 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (canvas === null) return;
-    const ctx = canvas.getContext("2d");
-    if (ctx === null) return;
-    setScreenRatio(screen.width / 2000);
-  }, []);
-
-  useEffect(() => {
-    document.addEventListener("keyup", onKeyUp);
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("keyup", onKeyUp);
-      document.removeEventListener("keydown", onKeyDown);
-    };
+    // document.addEventListener("keyup", onKeyUp);
+    // document.addEventListener("keydown", onKeyDown);
+    // return () => {
+    //   document.removeEventListener("keyup", onKeyUp);
+    //   document.removeEventListener("keydown", onKeyDown);
+    // };
   }, []);
 
   const nodesRefs = useRef<(NodeGRef | null)[]>([]);
@@ -277,7 +202,7 @@ export default function Home() {
   return (
     <div>
       <ElementRefContext.Provider
-        value={{ canvasRef, nodesRefs, linksRefs }}
+        value={{ stageRef, nodesRefs, linksRefs }}
       >
         <OperationFlagsRefContext.Provider
           value={{ shiftRef, inCanvasRef, caretVisibleRef }}
