@@ -36,24 +36,7 @@ import Konva from "konva";
 import NodeG from "@/classes/node";
 
 export default function Canvas() {
-  const { canvasRef } = useElementRef();
-  const [selectedObject, setSelectedObject] = useAtom(selectedObjectAtom);
-  const [nodes, setNodes] = useAtom(nodesAtom);
-  const links = useAtomValue(linksAtom);
-  const [currentLink, setCurrentLink] = useAtom(currentLinkAtom);
-  const editor = useAtomValue(jsonEditorAtom);
-  const [valueLinks, setLinks] = useAtom(linksAtom);
-  const [caretTimer, setCaretTimer] = useAtom(caretTimerAtom);
-  const theme = useAtomValue(themeAtom);
-  const setJsonEditor = useSetAtom(jsonEditorAtom);
   const [styleProps, setStyleProps] = useState<CSSProperties>({});
-
-  const movingObjectRef = useRef(false);
-  const originalClickRef = useRef<{ x: number; y: number }>(undefined);
-  const { shiftRef, inCanvasRef, caretVisibleRef } = useOperationFlagsRef();
-
-  const deltaMouseX = useRef<number>(null);
-  const deltaMouseY = useRef<number>(null);
 
   useEffect(() => {
     setStyleProps({
@@ -62,20 +45,17 @@ export default function Canvas() {
     });
   }, []);
 
-
-  const shapeRef = useRef<Konva.Rect | null>(null);
-
-  const positions = useState<{ x: number; y: number }[]>([]);
-  const positionRefs = useRef<(NodeGRef | null)[]>([]);
-  const [currentIndex, setCurrentIndex] = useState<number | null>(null);
+  const [nodesInfo, setNodesInfo] = useState<{ x: number; y: number }[]>([]);
+  const nodesRefs = useRef<(NodeGRef | null)[]>([]);
+  const [nodeCurrentIndex, setNodeCurrentIndex] = useState<number | null>(null);
 
   const onKeyDown: KeyboardEventHandler<HTMLDivElement> = (e) => {
       
-    if (currentIndex === null) return;
+    if (nodeCurrentIndex === null) return;
     
-    if (positionRefs.current[currentIndex] === null) return;
+    if (nodesRefs.current[nodeCurrentIndex] === null) return;
     
-    const ref = positionRefs.current[currentIndex];
+    const ref = nodesRefs.current[nodeCurrentIndex];
     
     if (ref === null) return;
     
@@ -87,24 +67,24 @@ export default function Canvas() {
   };
 
   useEffect(() => {
-    console.log(positions[0].length);
-    positionRefs.current = positions[0].map(
-      (_, index) => positionRefs.current[index] ?? null
+    console.log(nodesInfo.length);
+    nodesRefs.current = nodesInfo.map(
+      (_, index) => nodesRefs.current[index] ?? null
     );
 
-    if (currentIndex !== null) {
-      positionRefs.current[currentIndex]?.deselect();
-      positionRefs.current[positionRefs.current.length -1]?.select();
+    if (nodeCurrentIndex !== null) {
+      nodesRefs.current[nodeCurrentIndex]?.deselect();
+      nodesRefs.current[nodesRefs.current.length -1]?.select();
     }
 
-    positionRefs.current.map((ref, index) => {
+    nodesRefs.current.map((ref, index) => {
       if (ref !== null) {
         console.log(index, ref.x, ref.y);
       } else {
         console.log(index, "null");
       }
     });
-  }, [positions[0].length]);
+  }, [nodesInfo.length]);
 
   return (
     <div onKeyDown={onKeyDown} tabIndex={0}>
@@ -114,47 +94,29 @@ export default function Canvas() {
         width={styleProps.width as number}
         height={styleProps.height as number}
         onDblClick={(e) => {
-          positions[1]((prev) => [
+          setNodesInfo((prev) => [
             ...prev,
             { x: e.evt.offsetX, y: e.evt.offsetY },
           ]);
         }}
       >
         <Layer>
-          <NodeG x={100} y={100} />
-
-          {positions[0].map((pos, index) => (
+          {nodesInfo.map((pos, index) => (
             <NodeG
               key={index}
               ref={(e) => {
-                positionRefs.current[index] = e;
+                nodesRefs.current[index] = e;
               }}
               x={pos.x}
               y={pos.y}
               onSelect={() => {
-                if (currentIndex !== null) {
-                  positionRefs.current[currentIndex]?.deselect();
+                if (nodeCurrentIndex !== null) {
+                  nodesRefs.current[nodeCurrentIndex]?.deselect();
                 }
-                setCurrentIndex(index);
+                setNodeCurrentIndex(index);
               }}
             />
           ))}
-          <Text text="Try to drag shapes" fontSize={15} />
-          <Rect
-            x={20}
-            y={50}
-            width={100}
-            height={100}
-            fill="red"
-            shadowBlur={10}
-            draggable
-            ref={shapeRef}
-            onDragMove={(e) => {
-              //   console.log(JSON.stringify(e));
-              console.log(shapeRef.current?.x());
-            }}
-          />
-          <Circle x={200} y={100} radius={50} fill="green" draggable />
         </Layer>
       </Stage>
     </div>
