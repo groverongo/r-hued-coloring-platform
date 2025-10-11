@@ -1,38 +1,11 @@
-import Link from "@/classes/link";
-import NodeC, { NodeGRef } from "@/classes/node";
-import SelfLink from "@/classes/self_link";
-import StartLink from "@/classes/start_link";
-import { TemporaryLink } from "@/classes/temporary_link";
+import { NodeGRef } from "@/classes/node";
 import {
-  caretTimerAtom,
-  currentLinkAtom,
-  jsonEditorAtom,
-  linksAtom,
-  nodesAtom,
-  selectedObjectAtom,
-  themeAtom,
-} from "@/common/atoms";
-import { SNAP_TO_PADDING } from "@/common/constant";
-import { CANVAS_ACTIONS, CANVAS_CONDITIONS } from "@/common/messages";
-import { useElementRef, useOperationFlagsRef } from "@/common/refs";
-import {
-  crossBrowserRelativeMousePos,
-  draw,
-  uniqueId,
-} from "@/common/utilities";
-import { useAtom, useAtomValue } from "jotai";
-import { useSetAtom } from "jotai";
-import {
-  CSSProperties,
-  KeyboardEventHandler,
-  MouseEventHandler,
-  RefObject,
-  useEffect,
-  useRef,
-  useState,
+    CSSProperties,
+    KeyboardEventHandler, useEffect,
+    useRef,
+    useState
 } from "react";
-import { Circle, Layer, Rect, Stage, Text } from "react-konva";
-import Konva from "konva";
+import { Layer, Stage } from "react-konva";
 import NodeG from "@/classes/node";
 
 export default function Canvas() {
@@ -48,8 +21,14 @@ export default function Canvas() {
   const [nodesInfo, setNodesInfo] = useState<{ x: number; y: number }[]>([]);
   const nodesRefs = useRef<(NodeGRef | null)[]>([]);
   const [nodeCurrentIndex, setNodeCurrentIndex] = useState<number | null>(null);
+  const [drag, setDrag] = useState<boolean>(true);
+
+  const onKeyUp: KeyboardEventHandler<HTMLDivElement> = (e) => {
+    setDrag(true);
+  };
 
   const onKeyDown: KeyboardEventHandler<HTMLDivElement> = (e) => {
+    if(drag) setDrag(false);
       
     if (nodeCurrentIndex === null) return;
     
@@ -87,7 +66,7 @@ export default function Canvas() {
   }, [nodesInfo.length]);
 
   return (
-    <div onKeyDown={onKeyDown} tabIndex={0}>
+    <div onKeyDown={onKeyDown} onKeyUp={onKeyUp} tabIndex={0}>
       <Stage
         id="KonvaStage"
         style={styleProps}
@@ -110,11 +89,12 @@ export default function Canvas() {
               x={pos.x}
               y={pos.y}
               onSelect={() => {
-                if (nodeCurrentIndex !== null) {
+                if (nodeCurrentIndex !== null && nodeCurrentIndex !== index) {
                   nodesRefs.current[nodeCurrentIndex]?.deselect();
                 }
                 setNodeCurrentIndex(index);
               }}
+              draggable={drag}
             />
           ))}
         </Layer>

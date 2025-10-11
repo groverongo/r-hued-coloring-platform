@@ -21,11 +21,13 @@ export default function NodeG({
   x,
   y,
   onSelect,
+  draggable,
 }: {
   ref?: Ref<NodeGRef>;
   x: number;
   y: number;
   onSelect?: () => void;
+  draggable?: boolean;
 }) {
   const [isSelected, setIsSelected] = useState<boolean>(false);
   const [text, setText] = useState<string>("");
@@ -61,13 +63,14 @@ export default function NodeG({
     <Group
       ref={GroupRef}
       onClick={() => {
+        console.log(isSelected)
         setIsSelected(!isSelected);
       }}
       onDragStart={() => {
         if (isSelected) return;
         setIsSelected(true);
       }}
-      draggable
+      draggable={draggable}
     >
       <Circle
         x={x}

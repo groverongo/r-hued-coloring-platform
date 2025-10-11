@@ -4,7 +4,7 @@ import LinkC from "@/classes/link";
 import NodeC from "@/classes/node";
 import SelfLink from "@/classes/self_link";
 import StartLink from "@/classes/start_link";
-import { TemporaryLink } from "@/classes/temporary_link";
+// import { TemporaryLink } from "@/classes/temporary_link";
 import {
   caretTimerAtom,
   currentLinkAtom,
