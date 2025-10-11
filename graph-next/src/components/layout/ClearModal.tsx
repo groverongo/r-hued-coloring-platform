@@ -1,46 +1,65 @@
-import { currentLinkAtom, linksAtom, nodesAtom, themeAtom } from "@/common/atoms";
-import { useOperationFlagsRef } from "@/common/refs";
-import { useAtom, useAtomValue } from "jotai";
-import { MouseEventHandler } from "react";
+import {
+    linksAtom,
+    nodesAtom
+} from "@/common/atoms";
+import { useAtom } from "jotai";
+import { MouseEventHandler, useEffect, useState } from "react";
+import { Dialog } from "radix-ui";
 
-export default function ClearModal(){
+export const DialogDemo = () => {
+  const [open, setOpen] = useState(false);
 
-    const [nodes, setNodes] = useAtom(nodesAtom);
-    const [links, setlinks] = useAtom(linksAtom);
-    const currentLink = useAtomValue(currentLinkAtom);
-    const theme = useAtomValue(themeAtom);
-    const {inCanvasRef} = useOperationFlagsRef();
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.shiftKey) && e.key === "L") {
+        e.preventDefault();
+        setOpen((prev) => !prev);
+      }
+    };
 
-    function clearCanvas(){
-        setNodes([]);
-        setlinks([]);
-        // draw(undefined, undefined, nodes, links, currentLink, theme, selectedObjectAtom, caretVisibleAtom, inCanvas)
-    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
-    const clearCanvasDismiss: MouseEventHandler<HTMLButtonElement> = (e) => {
-        // confirmWindow.hide()
-    }
-    
-    const clearCanvasConfirm: MouseEventHandler<HTMLButtonElement> = (e) => {
-        clearCanvas();
-        // confirmWindow.hide()
-    }
+  const [nodes, setNodes] = useAtom(nodesAtom);
+  const [links, setlinks] = useAtom(linksAtom);
+  function clearCanvas() {
+    setNodes([]);
+    setlinks([]);
+    // draw(undefined, undefined, nodes, links, currentLink, theme, selectedObjectAtom, caretVisibleAtom, inCanvas)
+  }
 
-    return (
-        <div className="modal fade" id="confirmWindow" tabIndex={-1} aria-labelledby="exampleModalLabel" aria-hidden="true">
-            <div className="modal-dialog">
-                <div className="modal-content">
-                    <div className="modal-header">
-                        <h5 className="modal-title text-primary" id="exampleModalLabel">Clear the canvas?</h5>
-                    </div>
-                    <div className="modal-body" style={{direction: "rtl"}}>
-                        <button type="button" className="btn btn-success m-1" data-bs-dismiss="modal"
-                                onClick={clearCanvasConfirm}>Yes
-                        </button>
-                        <button type="button" className="btn btn-danger m-1" onClick={clearCanvasDismiss}>No</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    )
-}
+  const clearCanvasConfirm: MouseEventHandler<HTMLButtonElement> = (e) => {
+    clearCanvas();
+  };
+
+  return (
+    <Dialog.Root open={open} onOpenChange={setOpen}>
+      <Dialog.Trigger asChild>
+      </Dialog.Trigger>
+      <Dialog.Portal>
+        <Dialog.Overlay className="DialogOverlay" />
+        <Dialog.Content className="DialogContent">
+          <Dialog.Title className="DialogTitle">Clear</Dialog.Title>
+          <Dialog.Description className="DialogDescription">
+            Are you sure you want to clear the canvas?
+          </Dialog.Description>
+          <Dialog.Close asChild>
+            <button
+              className="Button green"
+              style={{ marginRight: "1rem" }}
+              onClick={clearCanvasConfirm}
+            >
+              Yes
+            </button>
+          </Dialog.Close>
+          <Dialog.Close asChild>
+            <button className="Button red" style={{ marginRight: "1rem" }}>
+              No
+            </button>
+          </Dialog.Close>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  );
+};

@@ -1,0 +1,33 @@
+let container;
+let editor;
+let options;
+
+
+// let in_panel = false;
+// let in_canvas = false;
+
+// let body_saved;
+
+// let confirmWindow;
+
+// let greekLetterNames = ['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon', 'Zeta', 'Eta', 'Theta', 'Iota', 'Kappa', 'Lambda', 'Mu', 'Nu', 'Xi', 'Omicron', 'Pi', 'Rho', 'Sigma', 'Tau', 'Upsilon', 'Phi', 'Chi', 'Psi', 'Omega'];
+
+// let caretTimer;
+// let caretVisible = true;
+
+// let theme = "light"
+let canvas;
+let panel;
+// let nodeRadius = 45;
+// let fontSize = 20;
+// let nodes = [];
+// let links = [];
+// let snapToPadding = 6; // pixels
+// let hitTargetPadding = 6; // pixels
+// let selectedObject = null; // either a Link or a Node
+// let currentLink = null; // a Link
+// let movingObject = false;
+// let originalClick;
+// const screenRatio = screen.width / 2000
+
+// let shift = false;

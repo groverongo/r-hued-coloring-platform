@@ -157,14 +157,6 @@ export function textToXML(text: string) {
     return result;
 }
 
-function clear_canvas_confirm() {
-    clearCanvas()
-    confirmWindow.hide()
-}
-
-function clear_canvas_dismiss() {
-    confirmWindow.hide()
-}
 
 function setEditorContent(jsonContent: any, setJsonEditor: ((data: unknown) => void)){
     setJsonEditor(jsonContent)

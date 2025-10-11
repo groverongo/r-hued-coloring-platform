@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import "@radix-ui/themes/styles.css";
+import { Theme } from "@radix-ui/themes";
+import "./styles.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,33 +25,48 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-
   return (
-    <html lang= "en" >
-    <head>
-    <title>FSM Ninja </title>
-      <meta charSet = "utf-8" />
+    <html lang="en">
+      <head>
+        <title>FSM Ninja </title>
+        <meta charSet="utf-8" />
 
-        <meta name="google-site-verification" content = "i0vmn4IP7f-3iowQql-H9hjpWkS_FjvrXaKsN3mG5Gw" />
+        <meta
+          name="google-site-verification"
+          content="i0vmn4IP7f-3iowQql-H9hjpWkS_FjvrXaKsN3mG5Gw"
+        />
 
+        <link rel="shortcut icon" type="image/x-icon" href="icon.ico" />
 
-          <link rel="shortcut icon" type = "image/x-icon" href = "icon.ico" />
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+          crossOrigin="anonymous"
+        />
 
+        <script src="https://cdn.jsdelivr.net/npm/jsoneditor@9.10.3/dist/jsoneditor.min.js">
+          {" "}
+        </script>
 
-            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel = "stylesheet" integrity = "sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossOrigin = "anonymous"/>
+        <link
+          href="https://cdn.jsdelivr.net/npm/jsoneditor@9.10.3/dist/jsoneditor.min.css"
+          rel="stylesheet"
+        />
 
-    <script src="https://cdn.jsdelivr.net/npm/jsoneditor@9.10.3/dist/jsoneditor.min.js" > </script>
-
-      <link href = "https://cdn.jsdelivr.net/npm/jsoneditor@9.10.3/dist/jsoneditor.min.css" rel = "stylesheet" />
-
-        <script src="https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.js" > </script>
-          < link href = "https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.css" rel = "stylesheet" />
-
-
-    </head>
-    <body className = {`${geistSans.variable} ${geistMono.variable}`}>
-  { children }
-  </body>
-  </html>
+        <script src="https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.js">
+          {" "}
+        </script>
+        <link
+          href="https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.css"
+          rel="stylesheet"
+        />
+      </head>
+      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+        <Theme>
+          {children}
+        </Theme>
+      </body>
+    </html>
   );
 }

@@ -1,8 +1,13 @@
-import { createContext, Ref, RefObject, useContext } from "react";
+import { Modal } from "bootstrap";
+import { createContext, RefObject, useContext } from "react";
 
-export const CanvasRefContext = createContext<RefObject<HTMLCanvasElement | null>>({current: null});
+export const ElementRefContext = createContext<{
+    canvasRef: RefObject<HTMLCanvasElement | null>, 
+}>({
+    canvasRef: {current: null}, 
+});
 
-export const useCanvasRef = () => useContext(CanvasRefContext);
+export const useElementRef = () => useContext(ElementRefContext);
 
 export const OperationFlagsRefContext = createContext<{
     shiftRef: RefObject<boolean>, 
