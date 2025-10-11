@@ -47,24 +47,39 @@ export default function Canvas() {
   };
 
   const onKeyDown: KeyboardEventHandler<HTMLDivElement> = (e) => {
+    console.log(e.key);
     if (keyDownUnblock) setKeyDownUnblock(false);
 
     if (e.key === "Shift") {
       setShiftPressed(true);
     }
 
-    if (nodeCurrentIndex === null) return;
+    if(nodeCurrentIndex !== null) {
+        const ref = nodesRefs.current[nodeCurrentIndex];
 
-    if (nodesRefs.current[nodeCurrentIndex] === null) return;
+        if (ref === null) return;
 
-    const ref = nodesRefs.current[nodeCurrentIndex];
+        if (e.key.length === 1 && /^[a-zA-Z0-9]$/.test(e.key)) {
+            ref.appendCharacter(e.key);
+        } else if (e.key === "Backspace") {
+            ref.deleteCharacter();
+        } else if (e.key === "Delete") {
+            ref.deselect();
+            nodesRefs.current.splice(nodeCurrentIndex, 1);
+            nodesInfo.splice(nodeCurrentIndex, 1);
+            setNodeCurrentIndex(null);
+        }
+    } else if (linkCurrentIndex !== null) {
+        const ref = linksRefs.current[linkCurrentIndex];
 
-    if (ref === null) return;
+        if (ref === null) return;
 
-    if (e.key.length === 1 && /^[a-zA-Z0-9]$/.test(e.key)) {
-      ref.appendCharacter(e.key);
-    } else if (e.key === "Backspace") {
-      ref.deleteCharacter();
+        if (e.key === "Delete") {
+            ref.deselect();
+            linksRefs.current.splice(linkCurrentIndex, 1);
+            linksInfo.splice(linkCurrentIndex, 1);
+            setLinkCurrentIndex(null);  
+        }
     }
   };
 
