@@ -14,7 +14,7 @@ import { NODE_G_MODES } from "@/common/constant";
 import { isIntString } from "@/common/utilities";
 import { useElementRef } from "@/common/refs";
 import { useAtom } from "jotai";
-import { linksInfoAtom, nodesInfoAtom } from "@/common/atoms";
+import { linkCurrentIndexAtom, linksInfoAtom, nodeCurrentIndexAtom, nodesInfoAtom } from "@/common/atoms";
 
 export default function Canvas() {
   const [styleProps, setStyleProps] = useState<CSSProperties>({});
@@ -33,8 +33,8 @@ export default function Canvas() {
   const [linksInfo, setLinksInfo] = useAtom(linksInfoAtom);
 
   const [nodeMode, setNodeMode] = useState<number>(0);
-  const [nodeCurrentIndex, setNodeCurrentIndex] = useState<number | null>(null);
-  const [linkCurrentIndex, setLinkCurrentIndex] = useState<number | null>(null);
+  const [nodeCurrentIndex, setNodeCurrentIndex] = useAtom(nodeCurrentIndexAtom);
+  const [linkCurrentIndex, setLinkCurrentIndex] = useAtom(linkCurrentIndexAtom);
 
   const [closestNodeIndex, setClosestNodeIndex] = useState<number | null>(null);
   const [keyDownUnblock, setKeyDownUnblock] = useState<boolean>(true);

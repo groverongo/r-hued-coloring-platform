@@ -1,10 +1,11 @@
 import {
-    linksAtom,
-    nodesAtom
+  linkCurrentIndexAtom,
+  linksAtom, linksInfoAtom, nodeCurrentIndexAtom, nodesInfoAtom
 } from "@/common/atoms";
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import { MouseEventHandler, useEffect, useState } from "react";
 import { Dialog } from "radix-ui";
+import { useElementRef } from "@/common/refs";
 
 export const DialogDemo = () => {
   const [open, setOpen] = useState(false);
@@ -21,11 +22,20 @@ export const DialogDemo = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const [nodes, setNodes] = useAtom(nodesAtom);
-  const [links, setlinks] = useAtom(linksAtom);
+  const {nodesRefs, linksRefs} = useElementRef();
+
+  const setNodesInfo = useSetAtom(nodesInfoAtom);
+  const setLinksInfo = useSetAtom(linksInfoAtom);
+  const setNodeCurrentIndex = useSetAtom(nodeCurrentIndexAtom);
+  const setLinkCurrentIndex = useSetAtom(linkCurrentIndexAtom);
+
   function clearCanvas() {
-    setNodes([]);
-    setlinks([]);
+    setNodesInfo([]);
+    setLinksInfo([]);
+    setNodeCurrentIndex(null);
+    setLinkCurrentIndex(null);
+    nodesRefs.current = [];
+    linksRefs.current = []; 
     // draw(undefined, undefined, nodes, links, currentLink, theme, selectedObjectAtom, caretVisibleAtom, inCanvas)
   }
 
