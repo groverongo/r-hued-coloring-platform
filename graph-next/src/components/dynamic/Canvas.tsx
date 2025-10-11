@@ -7,6 +7,7 @@ import {
 } from "react";
 import { Layer, Stage } from "react-konva";
 import NodeG from "@/classes/node";
+import TemporaryLinkG from "@/classes/temporary_link";
 
 export default function Canvas() {
   const [styleProps, setStyleProps] = useState<CSSProperties>({});
@@ -21,15 +22,23 @@ export default function Canvas() {
   const [nodesInfo, setNodesInfo] = useState<{ x: number; y: number }[]>([]);
   const nodesRefs = useRef<(NodeGRef | null)[]>([]);
   const [nodeCurrentIndex, setNodeCurrentIndex] = useState<number | null>(null);
-  const [drag, setDrag] = useState<boolean>(true);
+  const [keyDownUnblock, setKeyDownUnblock] = useState<boolean>(true);
+
+  const [shiftPressed, setShiftPressed] = useState<boolean>(false);
+  const [mouseDownPos, setMouseDownPos] = useState<{x: number, y: number} | null>(null);
 
   const onKeyUp: KeyboardEventHandler<HTMLDivElement> = (e) => {
-    setDrag(true);
+    setKeyDownUnblock(true);
+    if(e.key === "Shift") setShiftPressed(false);
   };
 
   const onKeyDown: KeyboardEventHandler<HTMLDivElement> = (e) => {
-    if(drag) setDrag(false);
-      
+    if(keyDownUnblock) setKeyDownUnblock(false);
+    
+    if(e.key === "Shift") {
+        setShiftPressed(true); 
+    }
+
     if (nodeCurrentIndex === null) return;
     
     if (nodesRefs.current[nodeCurrentIndex] === null) return;
@@ -73,13 +82,35 @@ export default function Canvas() {
         width={styleProps.width as number}
         height={styleProps.height as number}
         onDblClick={(e) => {
+            if (!keyDownUnblock) return;
+            
           setNodesInfo((prev) => [
             ...prev,
             { x: e.evt.offsetX, y: e.evt.offsetY },
           ]);
         }}
+
+        onMouseMove={(e) => {
+            if(mouseDownPos === null) return;
+            setMouseDownPos({x: e.evt.offsetX, y: e.evt.offsetY});
+        }}
+
+        onMouseDown={(e) => {
+            setMouseDownPos({x: e.evt.offsetX, y: e.evt.offsetY});
+        }}
+
+        onMouseUp={(e) => {
+            if(mouseDownPos === null) return;
+            setMouseDownPos(null);
+        }}
       >
         <Layer>
+            {shiftPressed && mouseDownPos !== null && nodeCurrentIndex !== null && (
+                <TemporaryLinkG
+                    from={{x: nodesRefs.current[nodeCurrentIndex]?.x || 0, y: nodesRefs.current[nodeCurrentIndex]?.y || 0}}
+                    to={{x: mouseDownPos.x, y: mouseDownPos.y}}
+                />
+            )}
           {nodesInfo.map((pos, index) => (
             <NodeG
               key={index}
@@ -94,7 +125,7 @@ export default function Canvas() {
                 }
                 setNodeCurrentIndex(index);
               }}
-              draggable={drag}
+              draggable={keyDownUnblock}
             />
           ))}
         </Layer>

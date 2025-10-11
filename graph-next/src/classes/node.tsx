@@ -35,8 +35,8 @@ export default function NodeG({
   const GroupRef = useRef<Konva.Group>(null);
 
   useImperativeHandle(ref, () => ({
-    x: GroupRef.current?.x() || x,
-    y: GroupRef.current?.y() || y,
+    x: GroupRef.current ? GroupRef.current.x() + x : x,
+    y: GroupRef.current ? GroupRef.current.y() + y : y,
     isSelected: isSelected,
     select: () => {
       setIsSelected(true);
@@ -69,6 +69,10 @@ export default function NodeG({
       onDragStart={() => {
         if (isSelected) return;
         setIsSelected(true);
+      }}
+      onDragEnd={(e) => {
+        console.log("initial", x, y);
+        console.log("final", e.target.x(), e.target.y());
       }}
       draggable={draggable}
     >
