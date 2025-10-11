@@ -1,8 +1,11 @@
-import { FONT_SIZE, NODE_RADIUS } from "@/common/constant";
-import { SelectedObjectType } from "@/common/types";
-import { drawText, strokeThemeBased } from "@/common/utilities";
+import {
+  FONT_SIZE,
+  NODE_G_COLORS,
+  NODE_G_MODES,
+  NODE_G_MODES_STYLE,
+  NODE_RADIUS,
+} from "@/common/constant";
 import Konva from "konva";
-import { KonvaEventObject } from "konva/lib/Node";
 import { Ref, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { Circle, Group, Text } from "react-konva";
 
@@ -14,6 +17,7 @@ export type NodeGRef = {
   deselect: () => void;
   appendCharacter: (character: string) => void;
   deleteCharacter: () => void;
+  changeColor: (index: number | null) => void;
 };
 
 export default function NodeG({
@@ -22,17 +26,21 @@ export default function NodeG({
   y,
   onSelect,
   draggable,
+  mode,
 }: {
   ref?: Ref<NodeGRef>;
   x: number;
   y: number;
   onSelect?: () => void;
   draggable?: boolean;
+  mode: number;
 }) {
   const [isSelected, setIsSelected] = useState<boolean>(false);
   const [text, setText] = useState<string>("");
 
   const GroupRef = useRef<Konva.Group>(null);
+
+  const [colorIndex, setColorIndex] = useState<number | null>(null);
 
   useImperativeHandle(ref, () => ({
     x: GroupRef.current ? GroupRef.current.x() + x : x,
@@ -51,6 +59,10 @@ export default function NodeG({
       if (text.length === 0) return;
       setText((prev) => prev.substring(0, prev.length - 1));
     },
+    changeColor: (index: number | null) => {
+      if (!isSelected) return;
+      setColorIndex(index);
+    },
   }));
 
   useEffect(() => {
@@ -63,7 +75,7 @@ export default function NodeG({
     <Group
       ref={GroupRef}
       onClick={() => {
-        console.log(isSelected)
+        console.log(isSelected);
         setIsSelected(!isSelected);
       }}
       onDragStart={() => {
@@ -80,8 +92,12 @@ export default function NodeG({
         x={x}
         y={y}
         radius={NODE_RADIUS}
-        fill={"white"}
-        stroke={isSelected ? "blue" : "black"}
+        fill={colorIndex === null ? "white" : NODE_G_COLORS[colorIndex].hex}
+        stroke={
+          isSelected
+            ? NODE_G_MODES_STYLE[NODE_G_MODES[mode]].strokeColor
+            : "black"
+        }
       />
       <Text text={text} x={x} y={y} fontSize={FONT_SIZE} fill="black" />
     </Group>

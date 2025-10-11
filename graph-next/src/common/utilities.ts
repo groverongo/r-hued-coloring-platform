@@ -12,6 +12,11 @@ export const uniqueId = () => {
     return `${dateString}_${randomness}`;
 };
 
+export const isIntString = (str: string): boolean => {
+    const num = Number(str);
+    return !isNaN(num) && Number.isInteger(num);
+}
+
 export function crossBrowserElementPos(e: MouseEvent) {
     let obj = e.target;
     let x = 0, y = 0;

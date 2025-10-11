@@ -10,6 +10,8 @@ import { Layer, Stage } from "react-konva";
 import NodeG from "@/classes/node";
 import TemporaryLinkG from "@/classes/temporary_link";
 import LinkG, { LinkGProps } from "@/classes/link";
+import { NODE_G_MODES } from "@/common/constant";
+import { isIntString } from "@/common/utilities";
 
 export default function Canvas() {
   const [styleProps, setStyleProps] = useState<CSSProperties>({});
@@ -29,6 +31,7 @@ export default function Canvas() {
   >([]);
   const linksRefs = useRef<(LinkGProps | null)[]>([]);
 
+  const [nodeMode, setNodeMode] = useState<number>(0);
   const [nodeCurrentIndex, setNodeCurrentIndex] = useState<number | null>(null);
   const [linkCurrentIndex, setLinkCurrentIndex] = useState<number | null>(null);
 
@@ -54,32 +57,42 @@ export default function Canvas() {
       setShiftPressed(true);
     }
 
-    if(nodeCurrentIndex !== null) {
-        const ref = nodesRefs.current[nodeCurrentIndex];
+    if (nodeCurrentIndex !== null) {
+      const ref = nodesRefs.current[nodeCurrentIndex];
 
-        if (ref === null) return;
+      if (ref === null) return;
 
-        if (e.key.length === 1 && /^[a-zA-Z0-9]$/.test(e.key)) {
-            ref.appendCharacter(e.key);
-        } else if (e.key === "Backspace") {
+      if (e.key.length === 1 && /^[a-zA-Z0-9]$/.test(e.key)) {
+        if (NODE_G_MODES[nodeMode] === "Label") {
+          ref.appendCharacter(e.key);
+        } else if (NODE_G_MODES[nodeMode] === "Color" && isIntString(e.key)) {
+          ref.changeColor(+e.key);
+        }
+      } else if (e.key === "Backspace") {
+          if (NODE_G_MODES[nodeMode] === "Label") {
             ref.deleteCharacter();
-        } else if (e.key === "Delete") {
-            ref.deselect();
-            nodesRefs.current.splice(nodeCurrentIndex, 1);
-            nodesInfo.splice(nodeCurrentIndex, 1);
-            setNodeCurrentIndex(null);
-        }
+          } else if (NODE_G_MODES[nodeMode] === "Color") {
+            ref.changeColor(null);
+          }
+      } else if (e.key === "Delete") {
+        ref.deselect();
+        nodesRefs.current.splice(nodeCurrentIndex, 1);
+        nodesInfo.splice(nodeCurrentIndex, 1);
+        setNodeCurrentIndex(null);
+      } else if (e.key === "Tab") {
+        setNodeMode((prev) => (prev + 1) % NODE_G_MODES.length);
+      }
     } else if (linkCurrentIndex !== null) {
-        const ref = linksRefs.current[linkCurrentIndex];
+      const ref = linksRefs.current[linkCurrentIndex];
 
-        if (ref === null) return;
+      if (ref === null) return;
 
-        if (e.key === "Delete") {
-            ref.deselect();
-            linksRefs.current.splice(linkCurrentIndex, 1);
-            linksInfo.splice(linkCurrentIndex, 1);
-            setLinkCurrentIndex(null);  
-        }
+      if (e.key === "Delete") {
+        ref.deselect();
+        linksRefs.current.splice(linkCurrentIndex, 1);
+        linksInfo.splice(linkCurrentIndex, 1);
+        setLinkCurrentIndex(null);
+      }
     }
   };
 
@@ -105,14 +118,6 @@ export default function Canvas() {
       nodesRefs.current[nodeCurrentIndex]?.deselect();
       nodesRefs.current[nodesRefs.current.length - 1]?.select();
     }
-
-    nodesRefs.current.map((ref, index) => {
-      if (ref !== null) {
-        console.log(index, ref.x, ref.y);
-      } else {
-        console.log(index, "null");
-      }
-    });
   }, [nodesInfo.length]);
 
   return (
@@ -208,6 +213,7 @@ export default function Canvas() {
                 deselectObjects(index, null);
               }}
               draggable={keyDownUnblock}
+              mode={nodeMode}
             />
           ))}
         </Layer>
