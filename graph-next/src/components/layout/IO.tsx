@@ -4,7 +4,7 @@ import { useElementRef } from "@/common/refs";
 
 export function IO() {
 
-    const {stageRef} = useElementRef();
+    const {stageRef, nodesRefs, linksRefs} = useElementRef();
 
     const saveAsLaTeX = (e: React.MouseEvent) => {
         console.error("saveAsLaTeX not implemented")
@@ -15,11 +15,22 @@ export function IO() {
         stageRef.current.toBlob({mimeType: 'image/png'}).then(blob => {
             navigator.clipboard.write([new ClipboardItem({'image/png': blob as Blob})])
         })
-        console.log("Copied to clipboard  \t\t😊")
+        console.log("PNG Copied to clipboard  \t\t😊")
     }
 
     const saveAsJson = (e: React.MouseEvent) => {
-        console.error("saveAsJson not implemented")
+        const adjacencyList: Record<number, number[]> = {};
+        for (let i = 0; i < nodesRefs.current.length; i++) {
+            adjacencyList[i] = [];
+        }
+        for (let i = 0; i < linksRefs.current.length; i++) {
+            const link = linksRefs.current[i];
+            if (link === null) continue;
+            adjacencyList[link.fromIndex].push(link.toIndex);
+            adjacencyList[link.toIndex].push(link.fromIndex);
+        }
+        navigator.clipboard.writeText(JSON.stringify(adjacencyList))
+        console.log("JSON Copied to clipboard  \t\t😊")
     }
 
     return (<div style={{ marginLeft: '2rem', marginRight: '2rem' }} className="p-2">
