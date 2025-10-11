@@ -4,7 +4,7 @@ import { CurrentLinkType, LinksType, SelectedObjectType } from "./types";
 
 export const screenRatioAtom = atom(0);
 
-export const themeAtom = atom('light');
+export const themeAtom = atom<'light' | 'dark'>('light');
 
 export const selectedObjectAtom = atom<SelectedObjectType>(null); 
 

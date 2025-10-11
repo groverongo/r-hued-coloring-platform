@@ -1,6 +1,7 @@
 "use client"
 
 import { useElementRef } from "@/common/refs";
+import ExportAsLaTeX from "@/handlers/latex";
 
 export function IO() {
 
