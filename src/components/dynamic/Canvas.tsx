@@ -167,7 +167,7 @@ export default function Canvas() {
         }}
         onMouseUp={(e) => {
           if (mouseDownPos === null) return;
-          if (closestNodeIndex !== null && nodeCurrentIndex !== null) {
+          if (closestNodeIndex !== null && nodeCurrentIndex !== null && nodeCurrentIndex !== closestNodeIndex) {
             setLinksInfo((prev) => [
               ...prev,
               { fromIndex: nodeCurrentIndex, toIndex: closestNodeIndex },
