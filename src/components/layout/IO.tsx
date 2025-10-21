@@ -1,7 +1,7 @@
 "use client"
 
 import { useElementRef } from "@/common/refs";
-import ExportAsLaTeX from "@/handlers/latex";
+import { obtainAdjacencyList } from "@/common/utilities";
 
 export function IO() {
 
@@ -20,16 +20,7 @@ export function IO() {
     }
 
     const saveAsJson = (e: React.MouseEvent) => {
-        const adjacencyList: Record<number, number[]> = {};
-        for (let i = 0; i < nodesRefs.current.length; i++) {
-            adjacencyList[i] = [];
-        }
-        for (let i = 0; i < linksRefs.current.length; i++) {
-            const link = linksRefs.current[i];
-            if (link === null) continue;
-            adjacencyList[link.fromIndex].push(link.toIndex);
-            adjacencyList[link.toIndex].push(link.fromIndex);
-        }
+        const adjacencyList: Record<number, number[]> = obtainAdjacencyList(nodesRefs.current, linksRefs.current)
         navigator.clipboard.writeText(JSON.stringify(adjacencyList))
         console.log("JSON Copied to clipboard  \t\t😊")
     }

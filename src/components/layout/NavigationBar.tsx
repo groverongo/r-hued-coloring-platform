@@ -1,5 +1,6 @@
 import { themeAtom } from "@/common/atoms";
 import { useAtom } from "jotai";
+import { Moon, Sun } from "lucide-react";
 
 export default function NavigationBar() {
   const [theme, setTheme] = useAtom(themeAtom);
@@ -15,9 +16,8 @@ export default function NavigationBar() {
           <button
             className={theme === "dark" ? "btn btn-light" : "btn btn-dark"}
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            role="button"
           >
-            {theme === "dark" ? "Light Mode" : "Dark Mode"}
+            {theme === "dark" ? <Sun/> : <Moon/>}
           </button>
         </div>
       </div>

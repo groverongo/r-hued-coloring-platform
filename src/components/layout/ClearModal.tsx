@@ -9,7 +9,7 @@ import { MouseEventHandler, useEffect, useState } from "react";
 import { Dialog } from "radix-ui";
 import { useElementRef } from "@/common/refs";
 
-export const DialogDemo = () => {
+export const ClearModal = () => {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {

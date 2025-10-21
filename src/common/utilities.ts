@@ -1,11 +1,26 @@
 import { MouseEvent } from "react";
 import { GREEK_LETTER_NAMES } from "./constant";
+import { NodeGRef } from "@/classes/node";
+import { LinkGRef } from "@/classes/link";
 
 export const uniqueId = () => {
     const dateString = Date.now().toString(36);
     const randomness = Math.random().toString(36).slice(2);
     return `${dateString}_${randomness}`;
 };
+
+export const obtainAdjacencyList = (nodes: (NodeGRef | null)[], links: (LinkGRef | null)[]) => {
+    const adjacencyList: Record<number, number[]> = {};
+    for (let i = 0; i < nodes.length; i++) {
+        adjacencyList[i] = [];
+    }
+    for (const link of links) {
+        if (link === null) continue;
+        adjacencyList[link.fromIndex].push(link.toIndex);
+        adjacencyList[link.toIndex].push(link.fromIndex);
+    }
+    return adjacencyList;
+}
 
 export const isIntString = (str: string): boolean => {
     const num = Number(str);
