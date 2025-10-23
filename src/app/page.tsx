@@ -24,9 +24,8 @@ export default function Home() {
   const inCanvasRef = useRef<boolean>(false);
   const caretVisibleRef = useRef<boolean>(true);
 
-  const nodesRefs = useRef<(NodeGRef | null)[]>([]);
-
-  const linksRefs = useRef<(LinkGRef | null)[]>([]);
+  const vertexRefs = useRef<Map<string, NodeGRef | null>>(new Map<string, NodeGRef | null>());
+  const edgeRefs = useRef<Map<string, LinkGRef | null>>(new Map<string, LinkGRef | null>());
 
   useEffect(() => {
     if (theme === "dark") {
@@ -39,7 +38,7 @@ export default function Home() {
   return (
     <div>
       <NavigationBar />
-      <ElementRefContext.Provider value={{ stageRef, nodesRefs, linksRefs }}>
+      <ElementRefContext.Provider value={{ stageRef, vertexRefs, edgeRefs }}>
         <OperationFlagsRefContext.Provider
           value={{ shiftRef, inCanvasRef, caretVisibleRef }}
         >

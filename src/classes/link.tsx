@@ -3,23 +3,23 @@ import { Ref, useEffect, useImperativeHandle, useState } from "react";
 import { Line } from "react-konva";
 
 export type LinkGRef = {
-    fromIndex: number;
-    toIndex: number;
+    fromId: string;
+    toId: string;
     isSelected: boolean;
     select: () => void;
     deselect: () => void;
 }
 
 export default function LinkG({
-    fromIndex,
-    toIndex,
+    fromId,
+    toId,
     from,
     to,
     ref,
     onSelect,
 }: {
-    fromIndex: number;
-    toIndex: number;
+    fromId: string;
+    toId: string;
     from: {x: number, y: number};
     to: {x: number, y: number};
     ref?: Ref<LinkGRef>;
@@ -30,8 +30,8 @@ export default function LinkG({
 
 
     useImperativeHandle(ref, () => ({
-        fromIndex: fromIndex,
-        toIndex: toIndex,
+        fromId: fromId,
+        toId: toId,
         isSelected: isSelected,
         select: () => setIsSelected(true),
         deselect: () => setIsSelected(false),

@@ -1,18 +1,16 @@
 import { LinkGRef } from "@/classes/link";
 import { NodeGRef } from "@/classes/node";
-import { Modal } from "bootstrap";
 import Konva from "konva";
 import { createContext, RefObject, useContext } from "react";
-import { proxy } from "valtio";
 
 export const ElementRefContext = createContext<{
     stageRef: RefObject<Konva.Stage | null>, 
-    nodesRefs: RefObject<(NodeGRef | null)[]>,
-    linksRefs: RefObject<(LinkGRef | null)[]>,
+    vertexRefs: RefObject<Map<string, NodeGRef | null>>,
+    edgeRefs: RefObject<Map<string, LinkGRef | null>>,
 }>({
     stageRef: {current: null}, 
-    nodesRefs: {current: []},
-    linksRefs: {current: []},
+    vertexRefs: {current: new Map<string, NodeGRef | null>()},
+    edgeRefs: {current: new Map<string, LinkGRef | null>()},
 });
 
 export const useElementRef = () => useContext(ElementRefContext);

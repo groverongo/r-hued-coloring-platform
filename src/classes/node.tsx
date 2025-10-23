@@ -15,11 +15,23 @@ export type NodeGRef = {
   text: string;
   colorIndex: number | null;
   isSelected: boolean;
+  neighbors: NodeGRef[];
+  addNeighbor: (neighbor: NodeGRef) => void;
+  removeNeighbor: (neighbor: NodeGRef) => void;
   select: () => void;
   deselect: () => void;
   appendCharacter: (character: string) => void;
   deleteCharacter: () => void;
   changeColor: (index: number | null) => void;
+};
+
+export type NodeGProps = {
+  ref?: Ref<NodeGRef>;
+  x: number;
+  y: number;
+  onSelect?: () => void;
+  draggable?: boolean;
+  mode: number;
 };
 
 export default function NodeG({
@@ -29,27 +41,30 @@ export default function NodeG({
   onSelect,
   draggable,
   mode,
-}: {
-  ref?: Ref<NodeGRef>;
-  x: number;
-  y: number;
-  onSelect?: () => void;
-  draggable?: boolean;
-  mode: number;
-}) {
+}: Readonly<NodeGProps>) {
   const [isSelected, setIsSelected] = useState<boolean>(false);
   const [text, setText] = useState<string>("");
+
+  const [neighbors, setNeighbors] = useState<NodeGRef[]>([]);
 
   const GroupRef = useRef<Konva.Group>(null);
 
   const [colorIndex, setColorIndex] = useState<number | null>(null);
 
+  
   useImperativeHandle(ref, () => ({
     x: GroupRef.current ? GroupRef.current.x() + x : x,
     y: GroupRef.current ? GroupRef.current.y() + y : y,
     text: text,
     colorIndex: colorIndex,
     isSelected: isSelected,
+    neighbors: neighbors,
+    addNeighbor: (neighbor: NodeGRef) => {
+      setNeighbors((prev) => [...prev, neighbor]);
+    },
+    removeNeighbor: (neighbor: NodeGRef) => {
+      setNeighbors((prev) => prev.filter((n) => n !== neighbor));
+    },
     select: () => {
       setIsSelected(true);
     },
@@ -97,7 +112,13 @@ export default function NodeG({
             : "black"
         }
       />
-      <Text text={text} x={x-5*text.length} y={y-10} fontSize={FONT_SIZE} fill="black" />
+      <Text
+        text={text}
+        x={x - 5 * text.length}
+        y={y - 10}
+        fontSize={FONT_SIZE}
+        fill="black"
+      />
     </Group>
   );
 }

@@ -1,13 +1,16 @@
 import {
-  linkCurrentIndexAtom,
-  linksInfoAtom,
-  nodeCurrentIndexAtom,
-  nodesInfoAtom,
+  edgeCurrentIdAtom,
+  edgeGraphAtom,
+  graphAdjacencyListAtom,
+  vertexCurrentIdAtom,
+  vertexGraphAtom,
 } from "@/common/atoms";
 import { useSetAtom } from "jotai";
 import { MouseEventHandler, useEffect, useState } from "react";
 import { Dialog } from "radix-ui";
 import { useElementRef } from "@/common/refs";
+import { NodeGRef } from "@/classes/node";
+import { LinkGRef } from "@/classes/link";
 
 export const ClearModal = () => {
   const [open, setOpen] = useState(false);
@@ -24,20 +27,22 @@ export const ClearModal = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const { nodesRefs, linksRefs } = useElementRef();
+  const { vertexRefs, edgeRefs } = useElementRef();
 
-  const setNodesInfo = useSetAtom(nodesInfoAtom);
-  const setLinksInfo = useSetAtom(linksInfoAtom);
-  const setNodeCurrentIndex = useSetAtom(nodeCurrentIndexAtom);
-  const setLinkCurrentIndex = useSetAtom(linkCurrentIndexAtom);
+  const setVertexGraph = useSetAtom(vertexGraphAtom);
+  const setEdgeGraph = useSetAtom(edgeGraphAtom);
+  const setGraphStructure = useSetAtom(graphAdjacencyListAtom);
+  const setVertexCurrentId = useSetAtom(vertexCurrentIdAtom);
+  const setEdgeCurrentId = useSetAtom(edgeCurrentIdAtom);
 
   function clearCanvas() {
-    setNodesInfo([]);
-    setLinksInfo([]);
-    setNodeCurrentIndex(null);
-    setLinkCurrentIndex(null);
-    nodesRefs.current = [];
-    linksRefs.current = [];
+    setVertexGraph(new Map<string, {x: number, y: number}>());
+    setEdgeGraph(new Map<string, {from: string, to: string, fromEntry: [string, string], toEntry: [string, string]}>());
+    setGraphStructure(new Map<string, Set<[string, string]>>());
+    setVertexCurrentId(null);
+    setEdgeCurrentId(null);
+    vertexRefs.current = new Map<string, NodeGRef | null>();
+    edgeRefs.current = new Map<string, LinkGRef | null>();
     // draw(undefined, undefined, nodes, links, currentLink, theme, selectedObjectAtom, caretVisibleAtom, inCanvas)
   }
 

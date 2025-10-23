@@ -1,21 +1,19 @@
-import { NodeGRef } from "@/classes/node";
 import {
   CSSProperties,
   FocusEventHandler,
   KeyboardEventHandler,
-  useEffect,
-  useRef,
-  useState,
+  useEffect, useRef, useState
 } from "react";
 import { Layer, Stage } from "react-konva";
-import NodeG from "@/classes/node";
+import NodeG, { NodeGRef } from "@/classes/node";
 import TemporaryLinkG from "@/classes/temporary_link";
 import LinkG, { LinkGRef } from "@/classes/link";
 import { NODE_G_MODES } from "@/common/constant";
 import { isIntString } from "@/common/utilities";
 import { useElementRef } from "@/common/refs";
 import { useAtom } from "jotai";
-import { linkCurrentIndexAtom, linksInfoAtom, nodeCurrentIndexAtom, nodesInfoAtom } from "@/common/atoms";
+import { v4 as uuidv4 } from 'uuid';
+import { edgeCurrentIdAtom, edgeGraphAtom, graphAdjacencyListAtom, vertexCurrentIdAtom, vertexGraphAtom } from "@/common/atoms";
 
 export default function Canvas() {
   const [styleProps, setStyleProps] = useState<CSSProperties>({});
@@ -29,17 +27,17 @@ export default function Canvas() {
     });
   }, []);
 
-  const {nodesRefs, linksRefs, stageRef} = useElementRef();
+  const {vertexRefs, edgeRefs, stageRef} = useElementRef();
 
-  const [nodesInfo, setNodesInfo] = useAtom(nodesInfoAtom);
-
-  const [linksInfo, setLinksInfo] = useAtom(linksInfoAtom);
+  const [vertexGraph, setVertexGraph] = useAtom(vertexGraphAtom);
+  const [edgeGraph, setEdgeGraph] = useAtom(edgeGraphAtom);
+  const [graphAdjacencyList, setGraphAdjacencyList] = useAtom(graphAdjacencyListAtom);
 
   const [nodeMode, setNodeMode] = useState<number>(0);
-  const [nodeCurrentIndex, setNodeCurrentIndex] = useAtom(nodeCurrentIndexAtom);
-  const [linkCurrentIndex, setLinkCurrentIndex] = useAtom(linkCurrentIndexAtom);
+  const [vertexCurrentId, setVertexCurrentId] = useAtom(vertexCurrentIdAtom);
+  const [edgeCurrentId, setEdgeCurrentId] = useAtom(edgeCurrentIdAtom);
 
-  const [closestNodeIndex, setClosestNodeIndex] = useState<number | null>(null);
+  const [closestVertexId, setClosestVertexId] = useState<string | null>(null);
   const [keyDownUnblock, setKeyDownUnblock] = useState<boolean>(true);
 
   const [shiftPressed, setShiftPressed] = useState<boolean>(false);
@@ -65,10 +63,10 @@ export default function Canvas() {
       setShiftPressed(true);
     }
 
-    if (nodeCurrentIndex !== null) {
-      const ref = nodesRefs.current[nodeCurrentIndex];
+    if (vertexCurrentId !== null) {
+      const ref = vertexRefs.current.get(vertexCurrentId);
 
-      if (ref === null) return;
+      if (ref === null || ref === undefined) return;
 
       if (e.key.length === 1 && /^[a-zA-Z0-9]$/.test(e.key)) {
         if (NODE_G_MODES[nodeMode] === "Label") {
@@ -84,49 +82,106 @@ export default function Canvas() {
           }
       } else if (e.key === "Delete") {
         ref.deselect();
-        nodesRefs.current.splice(nodeCurrentIndex, 1);
-        nodesInfo.splice(nodeCurrentIndex, 1);
-        setNodeCurrentIndex(null);
+
+        const edgeTuples = graphAdjacencyList.get(vertexCurrentId);
+
+        setGraphAdjacencyList((prev) => {
+          const newMap = new Map(prev);
+          
+          edgeTuples?.forEach((edgeTuple) => {
+            const edge = edgeGraph.get(edgeTuple[1]);
+            if(edge === undefined) return;
+            newMap.get(edgeTuple[0])?.delete(edge.fromEntry);
+          });
+          newMap.delete(vertexCurrentId);
+
+          return newMap;
+        });
+        setEdgeGraph((prev) => {
+          const newMap = new Map(prev);
+          edgeTuples?.forEach((edgeTuple) => {
+            newMap.delete(edgeTuple[1]);
+          });
+          return newMap;
+        });
+        setVertexGraph((prev) => {
+          const newMap = new Map(prev);
+          newMap.delete(vertexCurrentId);
+          return newMap;
+        });
+        setVertexCurrentId(null);
       } else if (e.key === "Control") {
         setNodeMode((prev) => (prev + 1) % NODE_G_MODES.length);
       }
-    } else if (linkCurrentIndex !== null) {
-      const ref = linksRefs.current[linkCurrentIndex];
+    } else if (edgeCurrentId !== null) {
+      const ref = edgeRefs.current.get(edgeCurrentId);
 
-      if (ref === null) return;
+      if (ref === null || ref === undefined) return;
 
       if (e.key === "Delete") {
         ref.deselect();
-        linksRefs.current.splice(linkCurrentIndex, 1);
-        linksInfo.splice(linkCurrentIndex, 1);
-        setLinkCurrentIndex(null);
+        // edgeRefs.current.delete(edgeCurrentId);
+        setGraphAdjacencyList((prev) => {
+          const edge = edgeGraph.get(edgeCurrentId);
+          if(edge === undefined) return prev;
+          const newMap = new Map(prev);
+          newMap.get(edge.from)?.delete(edge.toEntry);
+          newMap.get(edge.to)?.delete(edge.fromEntry);
+          return newMap;
+        });
+        setEdgeGraph((prev) => {
+          const newMap = new Map(prev);
+          newMap.delete(edgeCurrentId);
+          return newMap;
+        });
+        setEdgeCurrentId(null);
       }
     }
   };
 
-  function deselectObjects(nodeIndex: number | null, linkIndex: number | null) {
-    if (nodeCurrentIndex !== null && nodeCurrentIndex !== nodeIndex) {
-      nodesRefs.current[nodeCurrentIndex]?.deselect();
+  function deselectObjects(vertexId: string | null, edgeId: string | null) {
+    if (vertexCurrentId !== null && vertexCurrentId !== vertexId) {
+      vertexRefs.current.get(vertexCurrentId)?.deselect();
     }
-    setNodeCurrentIndex(nodeIndex);
+    setVertexCurrentId(vertexId);
 
-    if (linkCurrentIndex !== null && linkCurrentIndex !== linkIndex) {
-      linksRefs.current[linkCurrentIndex]?.deselect();
+    if (edgeCurrentId !== null && edgeCurrentId !== edgeId) {
+      edgeRefs.current.get(edgeCurrentId)?.deselect();
     }
-    setLinkCurrentIndex(linkIndex);
+    setEdgeCurrentId(edgeId);
   }
 
   useEffect(() => {
-    console.log(nodesInfo.length);
-    nodesRefs.current = nodesInfo.map(
-      (_, index) => nodesRefs.current[index] ?? null
-    );
+    const newVertexRefs = new Map<string, NodeGRef | null>();
+    Array.from(vertexGraph.keys()).forEach((id) => {
+      newVertexRefs.set(id, vertexRefs.current?.get(id) ?? null);
+    });
+    vertexRefs.current = newVertexRefs;
 
-    if (nodeCurrentIndex !== null) {
-      nodesRefs.current[nodeCurrentIndex]?.deselect();
-      nodesRefs.current[nodesRefs.current.length - 1]?.select();
+    if (vertexCurrentId !== null) {
+      vertexRefs.current.get(vertexCurrentId)?.deselect();
+      const [_, ref] = Array.from(vertexRefs.current).at(-1) ?? [null, null]; 
+      ref?.select();
     }
-  }, [nodesInfo.length]);
+  }, [vertexGraph.size]);
+
+  useEffect(() => {
+    const newEdgeRefs = new Map<string, LinkGRef | null>();
+    Array.from(edgeGraph.keys()).forEach((id) => {
+      newEdgeRefs.set(id, edgeRefs.current?.get(id) ?? null);
+    });
+    edgeRefs.current = newEdgeRefs;
+
+    if (edgeCurrentId !== null) {
+      edgeRefs.current.get(edgeCurrentId)?.deselect();
+      const [_, ref] = Array.from(edgeRefs.current).at(-1) ?? [null, null]; 
+      ref?.select();
+    }
+  }, [edgeGraph.size]);
+
+  useEffect(() => {
+    console.log('graphAdjacencyList', graphAdjacencyList)
+  }, [graphAdjacencyList])
 
   return (
     <div onKeyDown={onKeyDown} onKeyUp={onKeyUp} onBlur={onBlur} tabIndex={0}>
@@ -139,15 +194,21 @@ export default function Canvas() {
         onDblClick={(e) => {
           if (!keyDownUnblock) return;
 
-          setNodesInfo((prev) => [
-            ...prev,
-            { x: e.evt.offsetX, y: e.evt.offsetY },
-          ]);
+          const vertexId = uuidv4();
+          setGraphAdjacencyList((prev) => {
+            const newMap = new Map(prev);
+            newMap.set(vertexId, new Set<[string, string]>());
+            return newMap;
+          });
+          setVertexGraph((prev) => {
+            const newMap = new Map(prev);
+            newMap.set(vertexId, {x: e.evt.offsetX, y: e.evt.offsetY});
+            return newMap;
+          });
         }}
         onMouseMove={(e) => {
           if (mouseDownPos === null) return;
-          for (let i = 0; i < nodesRefs.current.length; i++) {
-            const ref = nodesRefs.current[i];
+          for (const [i, ref] of vertexRefs.current.entries()) {
             if (ref === null) continue;
 
             const distance = Math.sqrt(
@@ -155,11 +216,11 @@ export default function Canvas() {
                 Math.pow(ref.y - e.evt.offsetY, 2)
             );
             if (distance > 60) continue;
-            setClosestNodeIndex(i);
+            setClosestVertexId(i);
             setMouseDownPos({ x: ref.x, y: ref.y });
             return;
           }
-          setClosestNodeIndex(null);
+          setClosestVertexId(null);
           setMouseDownPos({ x: e.evt.offsetX, y: e.evt.offsetY });
         }}
         onMouseDown={(e) => {
@@ -167,12 +228,22 @@ export default function Canvas() {
         }}
         onMouseUp={(e) => {
           if (mouseDownPos === null) return;
-          if (closestNodeIndex !== null && nodeCurrentIndex !== null && nodeCurrentIndex !== closestNodeIndex) {
-            setLinksInfo((prev) => [
-              ...prev,
-              { fromIndex: nodeCurrentIndex, toIndex: closestNodeIndex },
-            ]);
-            setClosestNodeIndex(null);
+          if (closestVertexId !== null && vertexCurrentId !== null && vertexCurrentId !== closestVertexId) {
+            const edgeId = uuidv4();
+            const fromEntry: [string, string] = [vertexCurrentId, edgeId];
+            const toEntry: [string, string] = [closestVertexId, edgeId];
+            setEdgeGraph((prev) => {
+              const newMap = new Map(prev);
+              newMap.set(edgeId, {from: vertexCurrentId, to: closestVertexId, fromEntry, toEntry});
+              return newMap;
+            });
+            setGraphAdjacencyList((prev) => {
+              const newMap = new Map(prev);
+              newMap.get(vertexCurrentId)?.add(toEntry);
+              newMap.get(closestVertexId)?.add(fromEntry);
+              return newMap;
+            });
+            setClosestVertexId(null);
           }
           setMouseDownPos(null);
         }}
@@ -180,46 +251,47 @@ export default function Canvas() {
         <Layer>
           {shiftPressed &&
             mouseDownPos !== null &&
-            nodeCurrentIndex !== null && (
+            vertexCurrentId !== null && (
               <TemporaryLinkG
                 from={{
-                  x: nodesRefs.current[nodeCurrentIndex]?.x || 0,
-                  y: nodesRefs.current[nodeCurrentIndex]?.y || 0,
+                  x: vertexRefs.current.get(vertexCurrentId)?.x || 0,
+                  y: vertexRefs.current.get(vertexCurrentId)?.y || 0,
                 }}
                 to={{ x: mouseDownPos.x, y: mouseDownPos.y }}
               />
             )}
-          {linksInfo.map((link, index) => (
-            <LinkG
+          {Array.from(edgeGraph.entries()).map(([index, edge]) => {
+
+            const fromRef = vertexRefs.current.get(edge.from);
+            const toRef = vertexRefs.current.get(edge.to);
+
+            const from = fromRef ? {x: fromRef.x, y: fromRef.y} : {x: 0, y: 0};
+            const to = toRef ? {x: toRef.x, y: toRef.y} : {x: 0, y: 0};
+
+            return (<LinkG
               key={index}
               ref={(e) => {
-                linksRefs.current[index] = e;
+                edgeRefs.current.set(index, e);
               }}
               onSelect={() => {
                 deselectObjects(null, index);
               }}
-              fromIndex={link.fromIndex}
-              toIndex={link.toIndex}
-              from={{
-                x: nodesRefs.current[link.fromIndex]?.x || 0,
-                y: nodesRefs.current[link.fromIndex]?.y || 0,
-              }}
-              to={{
-                x: nodesRefs.current[link.toIndex]?.x || 0,
-                y: nodesRefs.current[link.toIndex]?.y || 0,
-              }}
-            />
-          ))}
-          {nodesInfo.map((pos, index) => (
+              fromId={edge.from}
+              toId={edge.to}
+              from={from}
+              to={to}
+            />)
+          })}
+          {Array.from(graphAdjacencyList.keys()).map((key) => (
             <NodeG
-              key={index}
+              key={key}
               ref={(e) => {
-                nodesRefs.current[index] = e;
+                vertexRefs.current.set(key, e);
               }}
-              x={pos.x}
-              y={pos.y}
+              x={vertexGraph.get(key)?.x || 0}
+              y={vertexGraph.get(key)?.y || 0}
               onSelect={() => {
-                deselectObjects(index, null);
+                deselectObjects(key, null);
               }}
               draggable={keyDownUnblock}
               mode={nodeMode}

@@ -11,6 +11,8 @@ import {
 } from "@/common/validation";
 import { X } from 'lucide-react';
 import path from "path/posix";
+import { useAtomValue } from "jotai";
+import { graphAdjacencyListAtom } from "@/common/atoms";
 
 export const ColoringModal = () => {
   const [open, setOpen] = useState(false);
@@ -30,7 +32,7 @@ export const ColoringModal = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const { nodesRefs, linksRefs } = useElementRef();
+  const graphAdjacencyList = useAtomValue(graphAdjacencyListAtom);
 
   const queryKey = useMemo(() => ["color-assignment"], []);
 
@@ -39,13 +41,9 @@ export const ColoringModal = () => {
     enabled: false,
     retry: false,
     queryFn: async (): Promise<ColoringAssigmentResponse> => {
-      const adjacencyList = obtainAdjacencyList(
-        nodesRefs.current,
-        linksRefs.current
-      );
       const response = await axios.post(
         `${R_HUED_COLORING_API}/assign-coloring`,
-        { graph: adjacencyList, method: "ACR", k, r },
+        { graph: graphAdjacencyList, method: "ACR", k, r },
         {
           responseType: "json",
           headers: {
