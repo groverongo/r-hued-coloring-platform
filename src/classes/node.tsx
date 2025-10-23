@@ -32,6 +32,7 @@ export type NodeGProps = {
   onSelect?: () => void;
   draggable?: boolean;
   mode: number;
+  compromised?: boolean;
   whileDragging?: (x: number, y: number) => void;
 };
 
@@ -42,7 +43,8 @@ export default function NodeG({
   onSelect,
   draggable,
   mode,
-  whileDragging
+  whileDragging,
+  compromised
 }: Readonly<NodeGProps>) {
   const [isSelected, setIsSelected] = useState<boolean>(false);
   const [text, setText] = useState<string>("");
@@ -124,10 +126,11 @@ export default function NodeG({
             ? NODE_G_MODES_STYLE[NODE_G_MODES[mode]].strokeColor
             : "black"
         }
+        dash={compromised ? [5, 5] : []}
       />
       <Text
-        text={text}
-        x={x - 5 * text.length}
+        text={mode === 0 ? text : colorIndex?.toString()}
+        x={x - 5 * (mode === 0 ? text.length : colorIndex?.toString().length || 0)}
         y={y - 10}
         fontSize={FONT_SIZE}
         fill="black"

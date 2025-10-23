@@ -5,7 +5,7 @@ import { obtainAdjacencyList } from "@/common/utilities";
 
 export function IO() {
 
-    const {stageRef, nodesRefs, linksRefs} = useElementRef();
+    const {stageRef, vertexRefs, edgeRefs} = useElementRef();
 
     const saveAsLaTeX = (e: React.MouseEvent) => {
         console.error("saveAsLaTeX not implemented")
@@ -20,7 +20,7 @@ export function IO() {
     }
 
     const saveAsJson = (e: React.MouseEvent) => {
-        const adjacencyList: Record<number, number[]> = obtainAdjacencyList(nodesRefs.current, linksRefs.current)
+        const adjacencyList: Record<number, number[]> = obtainAdjacencyList(vertexRefs.current, edgeRefs.current)
         navigator.clipboard.writeText(JSON.stringify(adjacencyList))
         console.log("JSON Copied to clipboard  \t\t😊")
     }

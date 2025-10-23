@@ -10,6 +10,16 @@ export type LinkGRef = {
     deselect: () => void;
 }
 
+type LinkGProps = {
+    fromId: string;
+    toId: string;
+    from: {x: number, y: number};
+    to: {x: number, y: number};
+    ref?: Ref<LinkGRef>;
+    onSelect?: () => void;
+    compromised?: boolean;
+}
+
 export default function LinkG({
     fromId,
     toId,
@@ -17,14 +27,8 @@ export default function LinkG({
     to,
     ref,
     onSelect,
-}: {
-    fromId: string;
-    toId: string;
-    from: {x: number, y: number};
-    to: {x: number, y: number};
-    ref?: Ref<LinkGRef>;
-    onSelect?: () => void;
-}) {
+    compromised,
+}: LinkGProps) {
 
     const [isSelected, setIsSelected] = useState<boolean>(false);
 
@@ -47,6 +51,7 @@ export default function LinkG({
         <Line
             points={[from.x, from.y, to.x, to.y]}
             stroke={isSelected ? "blue" : "black"}
+            dash={compromised ? [7, 10] : []}
             strokeWidth={2}
             onClick={() => {
                 setIsSelected(!isSelected);

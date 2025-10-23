@@ -9,7 +9,7 @@ export default function NavigationBar() {
     <nav className="navbar border-bottom border-body px-4 shadow-lg">
       <div className="container-fluid">
         <a className="navbar-brand fw-bolder text-secondary" href="">
-          Finite System Machine Designer
+          r-Dynamic Graph Coloring Tool
         </a>
 
         <div>

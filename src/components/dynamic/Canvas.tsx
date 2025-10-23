@@ -13,7 +13,7 @@ import { isIntString } from "@/common/utilities";
 import { useElementRef } from "@/common/refs";
 import { useAtom } from "jotai";
 import { v4 as uuidv4 } from 'uuid';
-import { edgeCurrentIdAtom, edgeGraphAtom, graphAdjacencyListAtom, vertexCurrentIdAtom, vertexGraphAtom } from "@/common/atoms";
+import { coloringAtom, edgeCurrentIdAtom, edgeGraphAtom, graphAdjacencyListAtom, rFactorAtom, vertexCurrentIdAtom, vertexGraphAtom } from "@/common/atoms";
 
 export default function Canvas() {
   const [styleProps, setStyleProps] = useState<CSSProperties>({});
@@ -40,11 +40,18 @@ export default function Canvas() {
   const [closestVertexId, setClosestVertexId] = useState<string | null>(null);
   const [keyDownUnblock, setKeyDownUnblock] = useState<boolean>(true);
 
+  const [rFactor] = useAtom(rFactorAtom);
+
+  const [compromisedVertices, setCompromisedVertices] = useState<Set<string>>(new Set<string>());
+  const [compromisedEdges, setCompromisedEdges] = useState<Set<string>>(new Set<string>());
+
   const [shiftPressed, setShiftPressed] = useState<boolean>(false);
   const [mouseDownPos, setMouseDownPos] = useState<{
     x: number;
     y: number;
   } | null>(null);
+
+  const [coloring, setColoring] = useAtom(coloringAtom);
 
   const onBlur: FocusEventHandler<HTMLDivElement> = (e) => {
     setKeyDownUnblock(true);
@@ -73,6 +80,10 @@ export default function Canvas() {
           ref.appendCharacter(e.key);
         } else if (NODE_G_MODES[nodeMode] === "Color" && isIntString(e.key)) {
           ref.changeColor(+e.key);
+          setColoring((prev) => ({
+            ...prev,
+            [vertexCurrentId]: +e.key,
+          }));
         }
       } else if (e.key === "Backspace") {
           if (NODE_G_MODES[nodeMode] === "Label") {
@@ -120,7 +131,6 @@ export default function Canvas() {
 
       if (e.key === "Delete") {
         ref.deselect();
-        // edgeRefs.current.delete(edgeCurrentId);
         setGraphAdjacencyList((prev) => {
           const edge = edgeGraph.get(edgeCurrentId);
           if(edge === undefined) return prev;
@@ -150,6 +160,33 @@ export default function Canvas() {
     }
     setEdgeCurrentId(edgeId);
   }
+
+  useEffect(() => {
+
+    const compromisedVerticesLocal: Set<string> = new Set<string>();
+    const compromisedEdgesLocal: Set<string> = new Set<string>();
+
+    for (const [vertex, edges] of graphAdjacencyList) {
+      const sourceVertexColor = coloring[vertex];
+      const neighborColors = new Set<number>();
+      for (const [neighborVertex, edgeId] of edges) {
+        neighborColors.add(coloring[neighborVertex]);
+        if(coloring[neighborVertex] === sourceVertexColor) {
+          compromisedEdgesLocal.add(edgeId);
+        }
+      } 
+
+      if(neighborColors.size < Math.min(rFactor, edges.size)) {
+        compromisedVerticesLocal.add(vertex);
+      }
+    }
+
+    console.log('compromisedVertices', compromisedVerticesLocal);
+    console.log('compromisedEdges', compromisedEdgesLocal);
+    
+    setCompromisedVertices(compromisedVerticesLocal);
+    setCompromisedEdges(compromisedEdgesLocal);
+  }, [coloring]);
 
   useEffect(() => {
     const newVertexRefs = new Map<string, NodeGRef | null>();
@@ -273,6 +310,7 @@ export default function Canvas() {
               ref={(e) => {
                 edgeRefs.current.set(index, e);
               }}
+              compromised={compromisedEdges.has(index)}
               onSelect={() => {
                 deselectObjects(null, index);
               }}
@@ -293,6 +331,7 @@ export default function Canvas() {
               onSelect={() => {
                 deselectObjects(key, null);
               }}
+              compromised={compromisedVertices.has(key)}
               draggable={keyDownUnblock}
               mode={nodeMode}
               whileDragging={(x, y) => {

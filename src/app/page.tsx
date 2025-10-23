@@ -5,6 +5,7 @@ import { NodeGRef } from "@/classes/node";
 import { themeAtom } from "@/common/atoms";
 import { queryClient } from "@/common/query";
 import { ElementRefContext, OperationFlagsRefContext } from "@/common/refs";
+import { ColoringParameters } from "@/components/dynamic/ColoringParameters";
 import { ClearModal } from "@/components/layout/ClearModal";
 import { ColoringModal } from "@/components/layout/ColoringModal";
 import { GraphBoard } from "@/components/layout/GraphBoard";
@@ -38,6 +39,7 @@ export default function Home() {
   return (
     <div>
       <NavigationBar />
+      <ColoringParameters/>
       <ElementRefContext.Provider value={{ stageRef, vertexRefs, edgeRefs }}>
         <OperationFlagsRefContext.Provider
           value={{ shiftRef, inCanvasRef, caretVisibleRef }}
