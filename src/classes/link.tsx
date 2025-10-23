@@ -53,6 +53,7 @@ export default function LinkG({
             stroke={isSelected ? "blue" : "black"}
             dash={compromised ? [7, 10] : []}
             strokeWidth={2}
+            hitStrokeWidth={40}
             onClick={() => {
                 setIsSelected(!isSelected);
             }}
