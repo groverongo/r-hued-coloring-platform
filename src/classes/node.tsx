@@ -32,6 +32,7 @@ export type NodeGProps = {
   onSelect?: () => void;
   draggable?: boolean;
   mode: number;
+  whileDragging?: (x: number, y: number) => void;
 };
 
 export default function NodeG({
@@ -41,6 +42,7 @@ export default function NodeG({
   onSelect,
   draggable,
   mode,
+  whileDragging
 }: Readonly<NodeGProps>) {
   const [isSelected, setIsSelected] = useState<boolean>(false);
   const [text, setText] = useState<string>("");
@@ -51,10 +53,18 @@ export default function NodeG({
 
   const [colorIndex, setColorIndex] = useState<number | null>(null);
 
+  const getAbsoluteX = () => {
+    return GroupRef.current ? GroupRef.current.x() + x : x;
+  }
+
+  const getAbsoluteY = () => {
+    return GroupRef.current ? GroupRef.current.y() + y : y;
+  }
+
   
   useImperativeHandle(ref, () => ({
-    x: GroupRef.current ? GroupRef.current.x() + x : x,
-    y: GroupRef.current ? GroupRef.current.y() + y : y,
+    x: getAbsoluteX(),
+    y: getAbsoluteY(),
     text: text,
     colorIndex: colorIndex,
     isSelected: isSelected,
@@ -100,6 +110,9 @@ export default function NodeG({
         setIsSelected(true);
       }}
       draggable={draggable}
+      onDragMove={(e) => {
+        whileDragging?.(getAbsoluteX(), getAbsoluteY());
+      }}
     >
       <Circle
         x={x}

@@ -36,7 +36,7 @@ export const ClearModal = () => {
   const setEdgeCurrentId = useSetAtom(edgeCurrentIdAtom);
 
   function clearCanvas() {
-    setVertexGraph(new Map<string, {x: number, y: number}>());
+    setVertexGraph(new Map<string, {x: number, y: number, xRelative: number, yRelative: number}>());
     setEdgeGraph(new Map<string, {from: string, to: string, fromEntry: [string, string], toEntry: [string, string]}>());
     setGraphStructure(new Map<string, Set<[string, string]>>());
     setVertexCurrentId(null);

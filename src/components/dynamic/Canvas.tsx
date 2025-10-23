@@ -2,7 +2,7 @@ import {
   CSSProperties,
   FocusEventHandler,
   KeyboardEventHandler,
-  useEffect, useRef, useState
+  useEffect, useState
 } from "react";
 import { Layer, Stage } from "react-konva";
 import NodeG, { NodeGRef } from "@/classes/node";
@@ -202,7 +202,7 @@ export default function Canvas() {
           });
           setVertexGraph((prev) => {
             const newMap = new Map(prev);
-            newMap.set(vertexId, {x: e.evt.offsetX, y: e.evt.offsetY});
+            newMap.set(vertexId, {x: e.evt.offsetX, y: e.evt.offsetY, xRelative: e.evt.offsetX, yRelative: e.evt.offsetY});
             return newMap;
           });
         }}
@@ -262,11 +262,11 @@ export default function Canvas() {
             )}
           {Array.from(edgeGraph.entries()).map(([index, edge]) => {
 
-            const fromRef = vertexRefs.current.get(edge.from);
-            const toRef = vertexRefs.current.get(edge.to);
+            const fromRef = vertexGraph.get(edge.from);
+            const toRef = vertexGraph.get(edge.to);
 
-            const from = fromRef ? {x: fromRef.x, y: fromRef.y} : {x: 0, y: 0};
-            const to = toRef ? {x: toRef.x, y: toRef.y} : {x: 0, y: 0};
+            const from = fromRef ? {x: fromRef.xRelative, y: fromRef.yRelative} : {x: 0, y: 0};
+            const to = toRef ? {x: toRef.xRelative, y: toRef.yRelative} : {x: 0, y: 0};
 
             return (<LinkG
               key={index}
@@ -295,6 +295,16 @@ export default function Canvas() {
               }}
               draggable={keyDownUnblock}
               mode={nodeMode}
+              whileDragging={(x, y) => {
+                setVertexGraph((prev) => {
+                  const newMap = new Map(prev);
+                  const current = newMap.get(key);
+                  if(current === undefined) return newMap;
+
+                  newMap.set(key, {...current, xRelative: x, yRelative: y});
+                  return newMap;
+                });
+              }}
             />
           ))}
         </Layer>
