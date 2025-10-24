@@ -34,6 +34,7 @@ export type NodeGProps = {
   mode: number;
   compromised?: boolean;
   whileDragging?: (x: number, y: number) => void;
+  allowedColors?: Set<number>;
 };
 
 export default function NodeG({
@@ -44,7 +45,8 @@ export default function NodeG({
   draggable,
   mode,
   whileDragging,
-  compromised
+  compromised,
+  allowedColors
 }: Readonly<NodeGProps>) {
   const [isSelected, setIsSelected] = useState<boolean>(false);
   const [text, setText] = useState<string>("");
@@ -103,38 +105,53 @@ export default function NodeG({
   }, [isSelected]);
 
   return (
-    <Group
-      ref={GroupRef}
-      onClick={() => {
-        setIsSelected(!isSelected);
-      }}
-      onDragStart={() => {
-        setIsSelected(true);
-      }}
-      draggable={draggable}
-      onDragMove={(e) => {
-        whileDragging?.(getAbsoluteX(), getAbsoluteY());
-      }}
-    >
-      <Circle
-        x={x}
-        y={y}
-        radius={NODE_RADIUS}
-        fill={colorIndex === null ? "white" : NODE_G_COLORS[colorIndex].hex}
-        stroke={
-          isSelected
-            ? NODE_G_MODES_STYLE[NODE_G_MODES[mode]].strokeColor
-            : "black"
-        }
-        dash={compromised ? [5, 5] : []}
-      />
-      <Text
-        text={mode === 0 ? text : colorIndex?.toString()}
-        x={x - 5 * (mode === 0 ? text.length : colorIndex?.toString().length || 0)}
-        y={y - 10}
-        fontSize={FONT_SIZE}
-        fill="black"
-      />
+      <Group
+        ref={GroupRef}
+        onClick={() => {
+          setIsSelected(!isSelected);
+        }}
+        draggable={draggable}
+        onDragStart={() => {
+          setIsSelected(true);
+        }}
+        onDragMove={(e) => {
+          whileDragging?.(getAbsoluteX(), getAbsoluteY());
+        }}
+      >
+        <Circle
+          x={x}
+          y={y}
+          radius={NODE_RADIUS}
+          fill={colorIndex === null ? "white" : NODE_G_COLORS[colorIndex].hex}
+          stroke={
+            isSelected
+              ? NODE_G_MODES_STYLE[NODE_G_MODES[mode]].strokeColor
+              : "black"
+          }
+          dash={compromised ? [5, 5] : []}
+        />
+        <Text
+          text={mode === 0 ? text : colorIndex?.toString()}
+          x={x - 5 * (mode === 0 ? text.length : colorIndex?.toString().length || 0)}
+          y={y - 10}
+          fontSize={FONT_SIZE}
+          fill="black"
+        />
+      { mode === 1 &&
+        Array.from(allowedColors?.values() ?? []).map((color, index, colors) => {
+          return (
+            <Text
+              key={index}
+              text={color.toString()}
+              x={x + NODE_RADIUS - 15 * (colors.length - index)}
+              y={y + NODE_RADIUS + 5}
+              fontSize={FONT_SIZE / 1.3 }
+              fill="black"
+
+            />
+          );
+        })
+      }
     </Group>
   );
 }
