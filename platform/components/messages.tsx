@@ -10,6 +10,9 @@ import { useDataStream } from "./data-stream-provider";
 import { Conversation, ConversationContent } from "./elements/conversation";
 import { Greeting } from "./greeting";
 import { PreviewMessage, ThinkingMessage } from "./message";
+import Canvas from "./graph-canvas";
+import { ColoringParameters } from "./coloring-parameters";
+import { LPSolution } from "./linear-programming-solution";
 
 type MessagesProps = {
   chatId: string;
@@ -65,10 +68,17 @@ function PureMessages({
       ref={messagesContainerRef}
       style={{ overflowAnchor: "none" }}
     >
-      <Conversation className="mx-auto flex min-w-0 max-w-4xl flex-col gap-4 md:gap-6">
+      <Conversation className="mx-auto flex min-w-0 flex-col gap-4 md:gap-6">
         <ConversationContent className="flex flex-col gap-4 px-2 py-4 md:gap-6 md:px-4">
-          {messages.length === 0 && <Greeting />}
+          {/* {messages.length === 0 && <Greeting />} */}
+          <div className="flex flex-row items-start gap-1 sm:gap-2">
 
+          <Canvas/>
+          <div className="flex flex-col items-start gap-1 sm:gap-2">
+            <ColoringParameters/>
+            <LPSolution/>
+          </div>
+          </div>
           {messages.map((message, index) => (
             <PreviewMessage
               chatId={chatId}
