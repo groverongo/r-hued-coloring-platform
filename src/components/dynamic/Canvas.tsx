@@ -11,9 +11,9 @@ import LinkG, { LinkGRef } from "@/classes/link";
 import { NODE_G_MODES } from "@/common/constant";
 import { isIntString } from "@/common/utilities";
 import { useElementRef } from "@/common/refs";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { v4 as uuidv4 } from 'uuid';
-import { coloringAtom, edgeCurrentIdAtom, edgeGraphAtom, graphAdjacencyListAtom, rFactorAtom, vertexCurrentIdAtom, vertexGraphAtom } from "@/common/atoms";
+import { coloringAtom, edgeCurrentIdAtom, edgeGraphAtom, graphAdjacencyListAtom, kColorsAtom, rFactorAtom, vertexCurrentIdAtom, vertexGraphAtom } from "@/common/atoms";
 
 export default function Canvas() {
   const [styleProps, setStyleProps] = useState<CSSProperties>({});
@@ -27,6 +27,9 @@ export default function Canvas() {
     });
   }, []);
 
+  const rFactor = useAtomValue(rFactorAtom);
+  const kFactor = useAtomValue(kColorsAtom);
+
   const {vertexRefs, edgeRefs, stageRef} = useElementRef();
 
   const [vertexGraph, setVertexGraph] = useAtom(vertexGraphAtom);
@@ -39,8 +42,6 @@ export default function Canvas() {
 
   const [closestVertexId, setClosestVertexId] = useState<string | null>(null);
   const [keyDownUnblock, setKeyDownUnblock] = useState<boolean>(true);
-
-  const [rFactor] = useAtom(rFactorAtom);
 
   const [compromisedVertices, setCompromisedVertices] = useState<Set<string>>(new Set<string>());
   const [compromisedEdges, setCompromisedEdges] = useState<Set<string>>(new Set<string>());
@@ -79,11 +80,17 @@ export default function Canvas() {
         if (NODE_G_MODES[nodeMode] === "Label") {
           ref.appendCharacter(e.key);
         } else if (NODE_G_MODES[nodeMode] === "Color" && isIntString(e.key)) {
-          ref.changeColor(+e.key);
-          setColoring((prev) => ({
-            ...prev,
-            [vertexCurrentId]: +e.key,
-          }));
+          if(+e.key >= kFactor) return;
+          ref.changeColor(+e.key === coloring[vertexCurrentId] ? null : +e.key);
+          setColoring((prev) => {
+            const newColoring = {...prev};
+            if(newColoring[vertexCurrentId] === +e.key) {
+              delete newColoring[vertexCurrentId];
+            } else {
+              newColoring[vertexCurrentId] = +e.key;
+            }
+            return newColoring;
+          });
         }
       } else if (e.key === "Backspace") {
           if (NODE_G_MODES[nodeMode] === "Label") {
@@ -320,8 +327,15 @@ export default function Canvas() {
               to={to}
             />)
           })}
-          {Array.from(graphAdjacencyList.keys()).map((key) => (
-            <NodeG
+          {Array.from(graphAdjacencyList.keys()).map((key) => {
+
+            const allowedColors = new Set(Array.from({length: kFactor}, (_, i) => i));
+            allowedColors.delete(coloring[key]);
+            for(const [vertex, _] of graphAdjacencyList.get(key) ?? []) {
+              allowedColors.delete(coloring[vertex]);
+            }
+
+            return (<NodeG
               key={key}
               ref={(e) => {
                 vertexRefs.current.set(key, e);
@@ -331,6 +345,7 @@ export default function Canvas() {
               onSelect={() => {
                 deselectObjects(key, null);
               }}
+              allowedColors={allowedColors}
               compromised={compromisedVertices.has(key)}
               draggable={keyDownUnblock}
               mode={nodeMode}
@@ -344,8 +359,8 @@ export default function Canvas() {
                   return newMap;
                 });
               }}
-            />
-          ))}
+            />)
+          })}
         </Layer>
       </Stage>
     </div>

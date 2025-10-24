@@ -26,6 +26,7 @@ export function ColoringParameters() {
                 <input
                     type="number"
                     min="2"
+                    max="10"
                     value={kColors}
                     onChange={handleKColorsChange}
                     className="ml-2 p-1 border rounded w-20"
