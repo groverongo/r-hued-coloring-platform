@@ -69,7 +69,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
                   setOpenMobile(false);
                 }}
               >
-                <span className="cursor-pointer rounded-md px-2 font-semibold text-4xl hover:bg-muted">
+                <span className="cursor-pointer rounded-md px-2 my-3 font-semibold text-4xl hover:bg-muted">
                   Graph Coloring
                 </span>
               </Link>

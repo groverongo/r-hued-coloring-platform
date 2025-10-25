@@ -12,6 +12,8 @@ import { VisibilitySelector, type VisibilityType } from "./visibility-selector";
 import { SaveGraphVersion } from "./save-graph-version";
 import { ImageExport } from "./image-export";
 import { JSONExport } from "./json-export";
+import { useAtom } from "jotai";
+import { graphNameAtom } from "@/lib/atoms";
 
 function PureChatHeader({
   chatId,
@@ -23,12 +25,13 @@ function PureChatHeader({
   isReadonly: boolean;
 }) {
   const router = useRouter();
+  const [graphName, setGraphName] = useAtom(graphNameAtom);
   const { open } = useSidebar();
 
   const { width: windowWidth } = useWindowSize();
 
   return (
-    <header className="sticky top-0 flex items-center gap-2 bg-background px-4 py-4 md:px-4">
+    <header className="sticky top-0 flex items-center gap-2 bg-background px-4 py-4 md:px-4 border-b-2 border-border">
       <SidebarToggle />
 
       {(!open || windowWidth < 768) && (
@@ -53,13 +56,28 @@ function PureChatHeader({
       {!isReadonly && (
         <VisibilitySelector
           chatId={chatId}
-          className="order-1 md:order-2"
+          className="order-1 md:order-1"
           selectedVisibilityType={selectedVisibilityType}
         />
       )}
 
+      <div className="order-1 flex items-center justify-center w-2/3">
+        <input
+          type="text"
+          value={graphName}
+          onChange={(e) => {
+            setGraphName(e.target.value);
+          }}
+          placeholder="Enter graph name"
+          className={
+            graphName.length > 0 ?
+            "w-1/3 bg-transparent px-3 text-xl focus-visible:outline-none focus-visible:underline underline-offset-3 disabled:cursor-not-allowed md:text-xl" :
+            "w-1/3 bg-transparent px-3 text-xl focus-visible:outline-none disabled:cursor-not-allowed md:text-xl"
+          }
+        />
+      </div>
 
-      <Button
+      {/* <Button
         asChild
         className="order-3 hidden bg-zinc-900 px-2 text-zinc-50 hover:bg-zinc-800 md:ml-auto md:flex md:h-fit dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
       >
@@ -71,7 +89,7 @@ function PureChatHeader({
           <VercelIcon size={16} />
           Deploy with Vercel
         </Link>
-      </Button>
+      </Button> */}
     </header>
   );
 }
