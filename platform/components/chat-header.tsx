@@ -10,6 +10,8 @@ import { PlusIcon, VercelIcon } from "./icons";
 import { useSidebar } from "./ui/sidebar";
 import { VisibilitySelector, type VisibilityType } from "./visibility-selector";
 import { SaveGraphVersion } from "./save-graph-version";
+import { ImageExport } from "./image-export";
+import { JSONExport } from "./json-export";
 
 function PureChatHeader({
   chatId,
@@ -43,6 +45,10 @@ function PureChatHeader({
         </Button>
       )}
       <SaveGraphVersion/>
+      <ImageExport/>
+      <ImageExport download/>
+      <JSONExport/>
+      <JSONExport download/>
 
       {!isReadonly && (
         <VisibilitySelector

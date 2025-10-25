@@ -29,11 +29,13 @@ import { Artifact } from "./artifact";
 import { useDataStream } from "./data-stream-provider";
 import { Messages } from "./messages";
 import { MultimodalInput } from "./multimodal-input";
-import { getChatHistoryPaginationKey } from "./sidebar-history";
 import { toast } from "./toast";
 import type { VisibilityType } from "./visibility-selector";
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from "@/lib/queries";
+import Canvas from "./graph-canvas";
+import { ColoringParameters } from "./coloring-parameters";
+import { LPSolution } from "./linear-programming-solution";
 
 export function Chat({
   id,
@@ -105,7 +107,7 @@ export function Chat({
       }
     },
     onFinish: () => {
-      mutate(unstable_serialize(getChatHistoryPaginationKey));
+      // mutate(unstable_serialize(getChatHistoryPaginationKey));
     },
     onError: (error) => {
       if (error instanceof ChatSDKError) {
@@ -164,6 +166,14 @@ export function Chat({
           isReadonly={isReadonly}
           selectedVisibilityType={initialVisibilityType}
         />
+
+        <div className="flex flex-row items-start justify-center w-full gap-1 sm:gap-2">
+          <Canvas/>
+          <div className="flex flex-col items-start gap-1 sm:gap-2">
+            <ColoringParameters/>
+            <LPSolution/>
+          </div>
+        </div>
 
         <Messages
           chatId={id}

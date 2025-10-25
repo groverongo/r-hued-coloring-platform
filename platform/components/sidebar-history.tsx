@@ -4,7 +4,7 @@ import { isToday, isYesterday, subMonths, subWeeks } from "date-fns";
 import { motion } from "framer-motion";
 import { useParams, useRouter } from "next/navigation";
 import type { User } from "next-auth";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWRInfinite from "swr/infinite";
 import {
@@ -26,29 +26,46 @@ import {
 import type { Chat } from "@/lib/db/schema";
 import { fetcher } from "@/lib/utils";
 import { LoaderIcon } from "./icons";
-import { ChatItem } from "./sidebar-history-item";
+import { GraphItem } from "./sidebar-history-item";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import axios from "axios";
+import { GraphsResponse } from "@/lib/validation";
+import { Toast } from "radix-ui";
 
-type GroupedChats = {
-  today: Chat[];
-  yesterday: Chat[];
-  lastWeek: Chat[];
-  lastMonth: Chat[];
-  older: Chat[];
+import "../styles/SaveGraphVersion.css";
+
+type GroupedGraphs = {
+  today: GraphsResponse[];
+  yesterday: GraphsResponse[];
+  lastWeek: GraphsResponse[];
+  lastMonth: GraphsResponse[];
+  older: GraphsResponse[];
 };
 
-export type ChatHistory = {
-  chats: Chat[];
+const ToastConditionComponents = {
+  success: {
+    title: <Toast.Title className="ToastTitle text-zinc-900 dark:text-zinc-200">The following graph has been deleted 😄</Toast.Title>,
+    description: (savedGraphId: string) => <Toast.Description className="ToastDescription">{savedGraphId}</Toast.Description>,
+  },
+  failure: {
+    title: <Toast.Title className="ToastTitle text-zinc-900 dark:text-zinc-200">Failed to delete graph 😭</Toast.Title>,
+    description: (errorMessage: string) => <Toast.Description className="ToastDescription">{errorMessage}</Toast.Description>,
+  }
+}
+
+export type GraphsHistory = {
+  graphs: GraphsResponse[];
   hasMore: boolean;
 };
 
 const PAGE_SIZE = 20;
 
-const groupChatsByDate = (chats: Chat[]): GroupedChats => {
+const groupGraphsByDate = (graphs: GraphsResponse[]): GroupedGraphs => {
   const now = new Date();
   const oneWeekAgo = subWeeks(now, 1);
   const oneMonthAgo = subMonths(now, 1);
 
-  return chats.reduce(
+  return graphs.reduce(
     (groups, chat) => {
       const chatDate = new Date(chat.createdAt);
 
@@ -72,85 +89,68 @@ const groupChatsByDate = (chats: Chat[]): GroupedChats => {
       lastWeek: [],
       lastMonth: [],
       older: [],
-    } as GroupedChats
+    } as GroupedGraphs
   );
 };
-
-export function getChatHistoryPaginationKey(
-  pageIndex: number,
-  previousPageData: ChatHistory
-) {
-  if (previousPageData && previousPageData.hasMore === false) {
-    return null;
-  }
-
-  if (pageIndex === 0) {
-    return `/api/history?limit=${PAGE_SIZE}`;
-  }
-
-  const firstChatFromPage = previousPageData.chats.at(-1);
-
-  if (!firstChatFromPage) {
-    return null;
-  }
-
-  return `/api/history?ending_before=${firstChatFromPage.id}&limit=${PAGE_SIZE}`;
-}
 
 export function SidebarHistory({ user }: { user: User | undefined }) {
   const { setOpenMobile } = useSidebar();
   const { id } = useParams();
+  const [pageIndex, setPageIndex] = useState(0);
 
-  const {
-    data: paginatedChatHistories,
-    setSize,
-    isValidating,
-    isLoading,
-    mutate,
-  } = useSWRInfinite<ChatHistory>(getChatHistoryPaginationKey, fetcher, {
-    fallbackData: [],
+  const timerRef = useRef<NodeJS.Timeout>();
+  const [open, setOpen] = useState(false);
+
+  const { data: paginatedGraphsHistory, isLoading: graphsLoading, refetch: fetchGraphs } = useQuery({
+    queryKey: ["graphs", pageIndex],
+    queryFn: async () => {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_R_HUED_COLORING_API}/graphs?limit=${PAGE_SIZE}`
+      );
+      return response.data as GraphsHistory;
+    },
+    refetchOnMount: false,
+    retry: false,
   });
 
+  const {mutate: deleteGraph, isSuccess: deleteGraphSuccess, error: deleteGraphError} = useMutation({
+    mutationFn: async () => {
+      const response = await axios.delete(
+        `${process.env.NEXT_PUBLIC_R_HUED_COLORING_API}/graphs/${id}`
+      );
+      return response.data;
+    },
+    retry: false,
+    onSuccess: () => {
+      if(id === deleteId)
+          router.push("/");
+    },
+    onError: () => {
+      toast("Failed to delete graph");
+    }
+  });
+
+  const deleteSpecificGraph = () => {
+    deleteGraph();
+
+    setOpen(false);
+    globalThis.clearTimeout(timerRef.current);
+    timerRef.current = globalThis.setTimeout(() => {
+      setOpen(true);
+    }, 100);
+  }
+  
   const router = useRouter();
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  const hasReachedEnd = paginatedChatHistories
-    ? paginatedChatHistories.some((page) => page.hasMore === false)
+  const hasReachedEnd = paginatedGraphsHistory?.graphs
+    ? paginatedGraphsHistory.hasMore === false
     : false;
 
-  const hasEmptyChatHistory = paginatedChatHistories
-    ? paginatedChatHistories.every((page) => page.chats.length === 0)
+  const hasEmptyGraphsHistory = paginatedGraphsHistory?.graphs
+    ? paginatedGraphsHistory.graphs.length === 0
     : false;
-
-  const handleDelete = () => {
-    const deletePromise = fetch(`/api/chat?id=${deleteId}`, {
-      method: "DELETE",
-    });
-
-    toast.promise(deletePromise, {
-      loading: "Deleting chat...",
-      success: () => {
-        mutate((chatHistories) => {
-          if (chatHistories) {
-            return chatHistories.map((chatHistory) => ({
-              ...chatHistory,
-              chats: chatHistory.chats.filter((chat) => chat.id !== deleteId),
-            }));
-          }
-        });
-
-        return "Chat deleted successfully";
-      },
-      error: "Failed to delete chat",
-    });
-
-    setShowDeleteDialog(false);
-
-    if (deleteId === id) {
-      router.push("/");
-    }
-  };
 
   if (!user) {
     return (
@@ -164,7 +164,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
     );
   }
 
-  if (isLoading) {
+  if (graphsLoading) {
     return (
       <SidebarGroup>
         <div className="px-2 py-1 text-sidebar-foreground/50 text-xs">
@@ -193,7 +193,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
     );
   }
 
-  if (hasEmptyChatHistory) {
+  if (hasEmptyGraphsHistory) {
     return (
       <SidebarGroup>
         <SidebarGroupContent>
@@ -210,48 +210,53 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
       <SidebarGroup>
         <SidebarGroupContent>
           <SidebarMenu>
-            {paginatedChatHistories &&
+            {paginatedGraphsHistory &&
               (() => {
-                const chatsFromHistory = paginatedChatHistories.flatMap(
-                  (paginatedChatHistory) => paginatedChatHistory.chats
-                );
+                const graphsFromHistory = paginatedGraphsHistory.graphs;
 
-                const groupedChats = groupChatsByDate(chatsFromHistory);
+                const groupedGraphs = groupGraphsByDate(graphsFromHistory);
 
                 return (
                   <div className="flex flex-col gap-6">
-                    {groupedChats.today.length > 0 && (
+                    {groupedGraphs.today.length > 0 && (
                       <div>
                         <div className="px-2 py-1 text-sidebar-foreground/50 text-xs">
                           Today
                         </div>
-                        {groupedChats.today.map((chat) => (
-                          <ChatItem
-                            chat={chat}
-                            isActive={chat.id === id}
-                            key={chat.id}
-                            onDelete={(chatId) => {
-                              setDeleteId(chatId);
-                              setShowDeleteDialog(true);
-                            }}
-                            setOpenMobile={setOpenMobile}
-                          />
+                        {groupedGraphs.today.map((graph) => (
+                          <Toast.Provider swipeDirection="right">
+                            <GraphItem
+                              graph={graph}
+                              isActive={graph.id === id}
+                              key={graph.id}
+                              onDelete={(graphId) => {
+                                setDeleteId(graphId);
+                                setShowDeleteDialog(true);
+                              }}
+                              setOpenMobile={setOpenMobile}
+                            />
+                            <Toast.Root className="ToastRoot bg-neutral-50 dark:bg-neutral-900 border border-emerald-200 dark:border-emerald-800" open={open} onOpenChange={setOpen}>
+                              {ToastConditionComponents[deleteGraphSuccess ? "success" : "failure"].title}
+                              {ToastConditionComponents[deleteGraphSuccess ? "success" : "failure"].description(deleteGraphSuccess ? graph.id : JSON.stringify(deleteGraphError))}
+                            </Toast.Root>
+                            <Toast.Viewport className="ToastViewport" />
+                          </Toast.Provider>
                         ))}
                       </div>
                     )}
 
-                    {groupedChats.yesterday.length > 0 && (
+                    {groupedGraphs.yesterday.length > 0 && (
                       <div>
                         <div className="px-2 py-1 text-sidebar-foreground/50 text-xs">
                           Yesterday
                         </div>
-                        {groupedChats.yesterday.map((chat) => (
-                          <ChatItem
-                            chat={chat}
-                            isActive={chat.id === id}
-                            key={chat.id}
-                            onDelete={(chatId) => {
-                              setDeleteId(chatId);
+                        {groupedGraphs.yesterday.map((graph) => (
+                          <GraphItem
+                            graph={graph}
+                            isActive={graph.id === id}
+                            key={graph.id}
+                            onDelete={(graphId) => {
+                              setDeleteId(graphId);
                               setShowDeleteDialog(true);
                             }}
                             setOpenMobile={setOpenMobile}
@@ -260,18 +265,18 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
                       </div>
                     )}
 
-                    {groupedChats.lastWeek.length > 0 && (
+                    {groupedGraphs.lastWeek.length > 0 && (
                       <div>
                         <div className="px-2 py-1 text-sidebar-foreground/50 text-xs">
                           Last 7 days
                         </div>
-                        {groupedChats.lastWeek.map((chat) => (
-                          <ChatItem
-                            chat={chat}
-                            isActive={chat.id === id}
-                            key={chat.id}
-                            onDelete={(chatId) => {
-                              setDeleteId(chatId);
+                        {groupedGraphs.lastWeek.map((graph) => (
+                          <GraphItem
+                            graph={graph}
+                            isActive={graph.id === id}
+                            key={graph.id}
+                            onDelete={(graphId) => {
+                              setDeleteId(graphId);
                               setShowDeleteDialog(true);
                             }}
                             setOpenMobile={setOpenMobile}
@@ -280,18 +285,18 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
                       </div>
                     )}
 
-                    {groupedChats.lastMonth.length > 0 && (
+                    {groupedGraphs.lastMonth.length > 0 && (
                       <div>
                         <div className="px-2 py-1 text-sidebar-foreground/50 text-xs">
                           Last 30 days
                         </div>
-                        {groupedChats.lastMonth.map((chat) => (
-                          <ChatItem
-                            chat={chat}
-                            isActive={chat.id === id}
-                            key={chat.id}
-                            onDelete={(chatId) => {
-                              setDeleteId(chatId);
+                        {groupedGraphs.lastMonth.map((graph) => (
+                          <GraphItem
+                            graph={graph}
+                            isActive={graph.id === id}
+                            key={graph.id}
+                            onDelete={(graphId) => {
+                              setDeleteId(graphId);
                               setShowDeleteDialog(true);
                             }}
                             setOpenMobile={setOpenMobile}
@@ -300,18 +305,18 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
                       </div>
                     )}
 
-                    {groupedChats.older.length > 0 && (
+                    {groupedGraphs.older.length > 0 && (
                       <div>
                         <div className="px-2 py-1 text-sidebar-foreground/50 text-xs">
                           Older than last month
                         </div>
-                        {groupedChats.older.map((chat) => (
-                          <ChatItem
-                            chat={chat}
-                            isActive={chat.id === id}
-                            key={chat.id}
-                            onDelete={(chatId) => {
-                              setDeleteId(chatId);
+                        {groupedGraphs.older.map((graph) => (
+                          <GraphItem
+                            graph={graph}
+                            isActive={graph.id === id}
+                            key={graph.id}
+                            onDelete={(graphId) => {
+                              setDeleteId(graphId);
                               setShowDeleteDialog(true);
                             }}
                             setOpenMobile={setOpenMobile}
@@ -323,14 +328,6 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
                 );
               })()}
           </SidebarMenu>
-
-          <motion.div
-            onViewportEnter={() => {
-              if (!isValidating && !hasReachedEnd) {
-                setSize((size) => size + 1);
-              }
-            }}
-          />
 
           {hasReachedEnd ? (
             <div className="mt-8 flex w-full flex-row items-center justify-center gap-2 px-2 text-sm text-zinc-500">
@@ -358,7 +355,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>
+            <AlertDialogAction onClick={deleteSpecificGraph}>
               Continue
             </AlertDialogAction>
           </AlertDialogFooter>

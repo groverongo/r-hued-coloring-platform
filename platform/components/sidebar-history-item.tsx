@@ -25,28 +25,29 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "./ui/sidebar";
+import { GraphsResponse } from "@/lib/validation";
 
 const PureChatItem = ({
-  chat,
+  graph,
   isActive,
   onDelete,
   setOpenMobile,
 }: {
-  chat: Chat;
+  graph: GraphsResponse;
   isActive: boolean;
-  onDelete: (chatId: string) => void;
+  onDelete: (graphId: string) => void;
   setOpenMobile: (open: boolean) => void;
 }) => {
-  const { visibilityType, setVisibilityType } = useChatVisibility({
-    chatId: chat.id,
-    initialVisibilityType: chat.visibility,
-  });
+  const { visibilityType, setVisibilityType } = {} as any/* useChatVisibility({
+    chatId: graph.id,
+    initialVisibilityType: graph.visibility,
+  }); */
 
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild isActive={isActive}>
-        <Link href={`/chat/${chat.id}`} onClick={() => setOpenMobile(false)}>
-          <span>{chat.title}</span>
+        <Link href={`/${graph.id}`} onClick={() => setOpenMobile(false)}>
+          <span>{graph.name}</span>
         </Link>
       </SidebarMenuButton>
 
@@ -101,7 +102,7 @@ const PureChatItem = ({
 
           <DropdownMenuItem
             className="cursor-pointer text-destructive focus:bg-destructive/15 focus:text-destructive dark:text-red-500"
-            onSelect={() => onDelete(chat.id)}
+            onSelect={() => onDelete(graph.id)}
           >
             <TrashIcon />
             <span>Delete</span>
@@ -112,7 +113,7 @@ const PureChatItem = ({
   );
 };
 
-export const ChatItem = memo(PureChatItem, (prevProps, nextProps) => {
+export const GraphItem = memo(PureChatItem, (prevProps, nextProps) => {
   if (prevProps.isActive !== nextProps.isActive) {
     return false;
   }

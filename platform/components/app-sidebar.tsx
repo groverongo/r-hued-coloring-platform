@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { useSWRConfig } from "swr";
 import { unstable_serialize } from "swr/infinite";
 import { PlusIcon, TrashIcon } from "@/components/icons";
-import { SidebarHistory, getChatHistoryPaginationKey } from "@/components/sidebar-history";
+import { SidebarHistory } from "@/components/sidebar-history";
 import { SidebarUserNav } from "@/components/sidebar-user-nav";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,6 +30,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "./ui/alert-dialog";
+import { queryClient } from "@/lib/queries";
+import { QueryClientProvider } from "@tanstack/react-query";
 
 export function AppSidebar({ user }: { user: User | undefined }) {
   const router = useRouter();
@@ -45,7 +47,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
     toast.promise(deletePromise, {
       loading: "Deleting all chats...",
       success: () => {
-        mutate(unstable_serialize(getChatHistoryPaginationKey));
+        // mutate(unstable_serialize(getChatHistoryPaginationKey));
         router.push("/");
         setShowDeleteAllDialog(false);
         return "All chats deleted successfully";
@@ -55,7 +57,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
   };
 
   return (
-    <>
+    <QueryClientProvider client={queryClient}>
       <Sidebar className="group-data-[side=left]:border-r-0">
         <SidebarHeader>
           <SidebarMenu>
@@ -135,6 +137,6 @@ export function AppSidebar({ user }: { user: User | undefined }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </QueryClientProvider>
   );
 }

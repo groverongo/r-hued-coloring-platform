@@ -4,7 +4,7 @@ import {
   KeyboardEventHandler,
   useEffect, useState
 } from "react";
-import { Layer, Stage } from "react-konva";
+import { Layer, Rect, Stage } from "react-konva";
 import NodeG, { NodeGRef } from "@/components/graphObjects/node";
 import TemporaryLinkG from "@/components/graphObjects/temporary_link";
 import LinkG, { LinkGRef } from "@/components/graphObjects/link";
@@ -230,6 +230,7 @@ export default function Canvas() {
     <div onKeyDown={onKeyDown} onKeyUp={onKeyUp} onBlur={onBlur} tabIndex={0}>
       <Stage
         id="KonvaStage"
+        className="bg-zinc-100 dark:bg-zinc-900"
         style={styleProps}
         width={styleProps.width as number}
         height={styleProps.height as number}
@@ -291,6 +292,7 @@ export default function Canvas() {
           setMouseDownPos(null);
         }}
       >
+        <Layer/>
         <Layer>
           {shiftPressed &&
             mouseDownPos !== null &&
