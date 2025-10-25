@@ -14,6 +14,7 @@ import { ImageExport } from "./image-export";
 import { JSONExport } from "./json-export";
 import { useAtom } from "jotai";
 import { graphNameAtom } from "@/lib/atoms";
+import { ClearGraphCanvas } from "./clear-graph-canvas";
 
 function PureChatHeader({
   chatId,
@@ -48,6 +49,7 @@ function PureChatHeader({
         </Button>
       )}
       <SaveGraphVersion/>
+      <ClearGraphCanvas/>
       <ImageExport/>
       <ImageExport download/>
       <JSONExport/>
