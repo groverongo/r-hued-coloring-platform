@@ -32,6 +32,8 @@ import { MultimodalInput } from "./multimodal-input";
 import { getChatHistoryPaginationKey } from "./sidebar-history";
 import { toast } from "./toast";
 import type { VisibilityType } from "./visibility-selector";
+import { QueryClientProvider } from '@tanstack/react-query'
+import { queryClient } from "@/lib/queries";
 
 export function Chat({
   id,
@@ -155,7 +157,7 @@ export function Chat({
   });
 
   return (
-    <>
+    <QueryClientProvider client={queryClient}>
       <div className="overscroll-behavior-contain flex h-dvh min-w-0 touch-pan-y flex-col bg-background">
         <ChatHeader
           chatId={id}
@@ -244,6 +246,6 @@ export function Chat({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </QueryClientProvider>
   );
 }

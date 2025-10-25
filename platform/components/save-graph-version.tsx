@@ -1,10 +1,39 @@
 import { Save } from "lucide-react";
 import { Button } from "./ui/button";
 import { Toast } from "radix-ui";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import "../styles/SaveGraphVersion.css";
-import { v4 } from "uuid";
+import { useMutation } from "@tanstack/react-query";
+import axios from "axios";
+import { useAtomValue } from "jotai";
+import { graphNameAtom, coloringAtom, edgeGraphAtom, graphAdjacencyListAtom, kColorsAtom, rFactorAtom, vertexGraphAtom } from "@/lib/atoms";
+import CreateGraphRequestSerializer from "@/lib/serializers";
+
+const ToastConditionComponents = {
+  success: {
+    title: <Toast.Title className="ToastTitle text-zinc-900 dark:text-zinc-200">Graph saved has been saved 😄</Toast.Title>,
+    description: (savedGraphId: string) => <Toast.Description className="ToastDescription">with id: {savedGraphId}</Toast.Description>,
+  },
+  failure: {
+    title: <Toast.Title className="ToastTitle text-zinc-900 dark:text-zinc-200">Graph saved was not saved 😭</Toast.Title>,
+    description: (errorMessage: string) => <Toast.Description className="ToastDescription">{errorMessage}</Toast.Description>,
+  }
+}
+
+interface CreateGraphRequest {
+  name: string;
+  graphAdjacencyList: string;
+  vertexGraph: string;
+  edgeGraph: string;
+  localColoring: string;
+  localK: number;
+  localR: number;
+}
+
+interface CreateGraphResponse {
+  id: string;
+}
 
 export function SaveGraphVersion(){
 
@@ -12,9 +41,40 @@ export function SaveGraphVersion(){
   const timerRef = useRef<NodeJS.Timeout>();
   const [savedGraphId, setSavedGraphId] = useState<string>("");
 
+  const graphName = useAtomValue(graphNameAtom);
+  const vertexGraph = useAtomValue(vertexGraphAtom);
+  const edgeGraph = useAtomValue(edgeGraphAtom);
+  const graphAdjacencyList = useAtomValue(graphAdjacencyListAtom);
+  const coloring = useAtomValue(coloringAtom);
+  const kColors = useAtomValue(kColorsAtom);
+  const rFactor = useAtomValue(rFactorAtom);
+
+  const { isSuccess, error, mutate, data } = useMutation({
+    mutationFn: async () => {
+      const request: CreateGraphRequest = {
+        name: graphName,
+        graphAdjacencyList: CreateGraphRequestSerializer.graphAdjacencyListSerializer(graphAdjacencyList),
+        vertexGraph: CreateGraphRequestSerializer.vertexGraphSerializer(vertexGraph),
+        edgeGraph: CreateGraphRequestSerializer.edgeGraphSerializer(edgeGraph),
+        localColoring: CreateGraphRequestSerializer.coloringSerializer(coloring),
+        localK: kColors,
+        localR: rFactor,
+      }
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_R_HUED_COLORING_API}/graphs`, request);
+      return response.data as CreateGraphResponse;
+    },
+    retry: false,
+  });
+
+  useEffect(() => {
+    if(isSuccess) {
+      setSavedGraphId(data?.id ?? "");
+    }
+  }, [isSuccess, data]);
+
   const saveGraphVersion = () => {
-    console.log("Save Graph Version");
-    setSavedGraphId(v4());
+    mutate();
+
     setOpen(false);
     globalThis.clearTimeout(timerRef.current);
     timerRef.current = globalThis.setTimeout(() => {
@@ -33,17 +93,8 @@ export function SaveGraphVersion(){
         <span className="md:sr-only">Save Graph Version</span>
       </Button>
       <Toast.Root className="ToastRoot bg-neutral-50 dark:bg-neutral-900 border border-emerald-200 dark:border-emerald-800" open={open} onOpenChange={setOpen}>
-				<Toast.Title className="ToastTitle text-zinc-900 dark:text-zinc-200">Graph saved has been saved 😄</Toast.Title>
-				<Toast.Description className="ToastDescription">
-					with id: {savedGraphId}
-				</Toast.Description>
-				{/* <Toast.Action
-					className="ToastAction"
-					asChild
-					altText="Goto schedule to undo"
-				>
-					<button className="Button small green">sd</button>
-				</Toast.Action> */}
+				{ToastConditionComponents[isSuccess ? "success" : "failure"].title}
+				{ToastConditionComponents[isSuccess ? "success" : "failure"].description(isSuccess ? savedGraphId : JSON.stringify(error))}
 			</Toast.Root>
 			<Toast.Viewport className="ToastViewport" />
     </Toast.Provider>
