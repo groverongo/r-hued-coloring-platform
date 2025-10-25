@@ -7,7 +7,9 @@ node_modules
 
 # testing
 coverage
-
+.vscode
+*.d.ts
+pnpm-lock.yaml
 # next.js
 .next/
 out/
