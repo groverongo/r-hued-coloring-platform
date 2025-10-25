@@ -14,6 +14,7 @@ interface ApiResponse {
 export function LPSolution() {
     const [kColors, setKColors] = useState(2);
     const [rFactor, setRFactor] = useState(1);
+    const [lpMethod, setLPMethod] = useState<"ACR" | "ACR-H" | "ACR-R" | "ACR-RH">("ACR");
     const [isLoading, setIsLoading] = useState(false);
     const [response, setResponse] = useState<ApiResponse | null>(null);
 
@@ -65,6 +66,10 @@ export function LPSolution() {
         }
     };
 
+    const handleLPMethodChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setLPMethod(e.target.value as "ACR" | "ACR-H" | "ACR-R" | "ACR-RH");
+    };
+
     return (
         <div className="bg-neutral-50 dark:bg-neutral-900 rounded-lg shadow-sm border border-neutral-200 dark:border-neutral-800 p-4 w-full max-w-md">
             <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-4 flex items-center">
@@ -101,23 +106,8 @@ export function LPSolution() {
                                 onChange={handleKColorsChange}
                                 className="w-24 px-3 py-1.5 border border-neutral-300 dark:border-neutral-600 rounded-md text-right font-mono text-sm bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-neutral-500 focus:border-transparent transition-all"
                             />
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400 text-sm pointer-events-none">
-                                {kColors}
-                            </span>
                         </div>
                     </div>
-                    <div className="flex justify-between text-xs text-neutral-500 dark:text-neutral-400 px-1">
-                        <span>2</span>
-                        <span>10</span>
-                    </div>
-                    <input
-                        type="range"
-                        min="2"
-                        max="10"
-                        value={kColors}
-                        onChange={handleKColorsChange}
-                        className="w-full h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full appearance-none cursor-pointer accent-neutral-900 dark:accent-neutral-200"
-                    />
                 </div>
 
                 <div className="space-y-1">
@@ -147,23 +137,47 @@ export function LPSolution() {
                                 onChange={handleRFactorChange}
                                 className="w-24 px-3 py-1.5 border border-neutral-300 dark:border-neutral-600 rounded-md text-right font-mono text-sm bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-neutral-500 focus:border-transparent transition-all"
                             />
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400 text-sm pointer-events-none">
-                                {rFactor}
-                            </span>
                         </div>
                     </div>
-                    <div className="flex justify-between text-xs text-neutral-500 dark:text-neutral-400 px-1">
-                        <span>1</span>
-                        <span>{kColors - 1}</span>
+                </div>
+                
+                <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                        <label htmlFor="lp-method" className="text-sm font-medium text-neutral-800 dark:text-neutral-200 flex items-center">
+                            LP Method
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <button className="ml-2 text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200">
+                                            <Info className="h-4 w-4" />
+                                        </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="max-w-xs">
+                                        <p>Set the LP method to use for the coloring algorithm</p>
+                                        <ul>
+                                            <li>ACR: Solve using standard r-dynamic coloring constraints</li>
+                                            <li>ACR-H: Solve using standard r-dynamic coloring constraints with a heuristic</li>
+                                            <li>ACR-R: Solve using standard r-dynamic coloring constraints using a previous solution as a starting point</li>
+                                            <li>ACR-RH: Solve using standard r-dynamic coloring constraints using a previous solution as a starting point and a heuristic</li>
+                                        </ul>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        </label>
+                        <div className="relative">
+                            <select
+                                id="lp-method"
+                                value={lpMethod}
+                                onChange={handleLPMethodChange}
+                                className="w-24 px-3 py-1.5 border border-neutral-300 dark:border-neutral-600 rounded-md text-right font-mono text-sm bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-neutral-500 focus:border-transparent transition-all"
+                            >
+                                <option value="ACR">ACR</option>
+                                <option value="ACR-H">ACR-H</option>
+                                <option value="ACR-R">ACR-R</option>
+                                <option value="ACR-RH">ACR-RH</option>
+                            </select>
+                        </div>
                     </div>
-                    <input
-                        type="range"
-                        min="1"
-                        max={kColors - 1}
-                        value={rFactor}
-                        onChange={handleRFactorChange}
-                        className="w-full h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full appearance-none cursor-pointer accent-neutral-900 dark:accent-neutral-200"
-                    />
                 </div>
 
                 <div className="pt-4">

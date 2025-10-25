@@ -167,45 +167,48 @@ export function Chat({
           selectedVisibilityType={initialVisibilityType}
         />
 
-        <div className="flex flex-row items-start justify-center w-full gap-1 sm:gap-2">
-          <Canvas/>
-          <div className="flex flex-col items-start gap-1 sm:gap-2">
-            <ColoringParameters/>
-            <LPSolution/>
+        <div className="flex flex-row items-stretch gap-1 sm:gap-2 flex-1 overflow-hidden">
+          <div className="flex-1 flex flex-col items-center justify-center gap-1 sm:gap-2 overflow-y-auto p-4">
+            <Canvas/>
+            <div className="flex flex-row gap-1 sm:gap-2">
+              <ColoringParameters/>
+              <LPSolution/> 
+            </div>
           </div>
-        </div>
 
-        <Messages
-          chatId={id}
-          isArtifactVisible={isArtifactVisible}
-          isReadonly={isReadonly}
-          messages={messages}
-          regenerate={regenerate}
-          selectedModelId={initialChatModel}
-          setMessages={setMessages}
-          status={status}
-          votes={votes}
-        />
-
-        <div className="sticky bottom-0 z-1 mx-auto flex w-full max-w-4xl gap-2 border-t-0 bg-background px-2 pb-3 md:px-4 md:pb-4">
-          {!isReadonly && (
-            <MultimodalInput
-              attachments={attachments}
+          <div className="flex flex-col w-full max-w-2xl border-l-2 border-border overflow-hidden">
+            <Messages
               chatId={id}
-              input={input}
+              isArtifactVisible={isArtifactVisible}
+              isReadonly={isReadonly}
               messages={messages}
-              onModelChange={setCurrentModelId}
-              selectedModelId={currentModelId}
-              selectedVisibilityType={visibilityType}
-              sendMessage={sendMessage}
-              setAttachments={setAttachments}
-              setInput={setInput}
+              regenerate={regenerate}
+              selectedModelId={initialChatModel}
               setMessages={setMessages}
               status={status}
-              stop={stop}
-              usage={usage}
+              votes={votes}
             />
-          )}
+            <div className="sticky bottom-0 z-1 mx-auto flex w-full max-w-4xl gap-2 border-t-0 bg-background px-2 pb-3 md:px-4 md:pb-4">
+              {!isReadonly && (
+                <MultimodalInput
+                  attachments={attachments}
+                  chatId={id}
+                  input={input}
+                  messages={messages}
+                  onModelChange={setCurrentModelId}
+                  selectedModelId={currentModelId}
+                  selectedVisibilityType={visibilityType}
+                  sendMessage={sendMessage}
+                  setAttachments={setAttachments}
+                  setInput={setInput}
+                  setMessages={setMessages}
+                  status={status}
+                  stop={stop}
+                  usage={usage}
+                />
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
