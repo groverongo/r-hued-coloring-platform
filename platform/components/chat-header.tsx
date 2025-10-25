@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { PlusIcon, VercelIcon } from "./icons";
 import { useSidebar } from "./ui/sidebar";
 import { VisibilitySelector, type VisibilityType } from "./visibility-selector";
+import { SaveGraphVersion } from "./save-graph-version";
 
 function PureChatHeader({
   chatId,
@@ -41,6 +42,7 @@ function PureChatHeader({
           <span className="md:sr-only">New Chat</span>
         </Button>
       )}
+      <SaveGraphVersion/>
 
       {!isReadonly && (
         <VisibilitySelector
@@ -49,6 +51,7 @@ function PureChatHeader({
           selectedVisibilityType={selectedVisibilityType}
         />
       )}
+
 
       <Button
         asChild
