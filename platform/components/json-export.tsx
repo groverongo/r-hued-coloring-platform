@@ -7,6 +7,7 @@ import { Braces, FileJson } from "lucide-react";
 import CreateGraphRequestSerializer from "@/lib/serializers";
 import { graphAdjacencyListAtom } from "@/lib/atoms";
 import { useAtomValue } from "jotai";
+import { TooltipHeaderButton } from "./ui/tooltip-header-button";
 
 
 export function JSONExport({download}: {download?: boolean}){
@@ -40,8 +41,11 @@ export function JSONExport({download}: {download?: boolean}){
     }, 100);
   }
 
+  const tooltipContent = download ? "Download JSON" : "Copy JSON to clipboard";
+
   return (
-    <Toast.Provider swipeDirection="right">
+  <>
+    <TooltipHeaderButton tooltipContent={tooltipContent}>
       <Button
         className="order-2 ml-auto h-8 px-2 md:order-1 md:ml-0 md:h-fit md:px-2"
         variant="outline"
@@ -52,11 +56,14 @@ export function JSONExport({download}: {download?: boolean}){
         }
         <span className="md:sr-only">Export to json</span>
       </Button>
+    </TooltipHeaderButton>
+    <Toast.Provider swipeDirection="right">
+      
       <Toast.Root className="ToastRoot bg-neutral-50 dark:bg-neutral-900 border border-emerald-200 dark:border-emerald-800" open={open} onOpenChange={setOpen}>
 				<Toast.Title className="ToastTitle text-zinc-900 dark:text-zinc-200">{download ? "JSON downloaded" : "JSON copied to clipboard"} 😄</Toast.Title>
-				{/* <Toast.Description className="ToastDescription">with id: {savedGraphId}</Toast.Description>, */}
 			</Toast.Root>
 			<Toast.Viewport className="ToastViewport" />
     </Toast.Provider>
+  </>
   )
 }

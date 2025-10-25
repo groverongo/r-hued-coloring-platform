@@ -6,6 +6,7 @@ import "../styles/SaveGraphVersion.css";
 import { useElementRef } from "@/lib/refs";
 import { Image, ImageDown } from "lucide-react";
 import Konva from "konva";
+import { TooltipHeaderButton } from "./ui/tooltip-header-button";
 
 
 export function ImageExport({download}: {download?: boolean}){
@@ -50,8 +51,11 @@ export function ImageExport({download}: {download?: boolean}){
     }, 100);
   }
 
+  const tooltipContent = download ? "Download PNG" : "Copy PNG to clipboard";
+
   return (
-    <Toast.Provider swipeDirection="right">
+    <>
+    <TooltipHeaderButton tooltipContent={tooltipContent}>
       <Button
         className="order-2 ml-auto h-8 px-2 md:order-1 md:ml-0 md:h-fit md:px-2"
         variant="outline"
@@ -60,13 +64,16 @@ export function ImageExport({download}: {download?: boolean}){
         {download ? <ImageDown/>
         : <Image/>
         }
-        <span className="md:sr-only">Export to png</span>
+        <span className="md:sr-only">{tooltipContent}</span>
       </Button>
+    </TooltipHeaderButton>
+
+    <Toast.Provider swipeDirection="right">
       <Toast.Root className="ToastRoot bg-neutral-50 dark:bg-neutral-900 border border-emerald-200 dark:border-emerald-800" open={open} onOpenChange={setOpen}>
 				<Toast.Title className="ToastTitle text-zinc-900 dark:text-zinc-200">{download ? "PNG downloaded" : "PNG copied to clipboard"} 😄</Toast.Title>
-				{/* <Toast.Description className="ToastDescription">with id: {savedGraphId}</Toast.Description>, */}
 			</Toast.Root>
 			<Toast.Viewport className="ToastViewport" />
     </Toast.Provider>
+    </>
   )
 }

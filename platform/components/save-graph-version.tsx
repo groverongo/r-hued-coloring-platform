@@ -1,14 +1,15 @@
 import { Save } from "lucide-react";
 import { Button } from "./ui/button";
-import { Toast } from "radix-ui";
+import { Toast, Tooltip } from "radix-ui";
 import { useEffect, useRef, useState } from "react";
 
-import "../styles/SaveGraphVersion.css";
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import { useAtomValue } from "jotai";
 import { graphNameAtom, coloringAtom, edgeGraphAtom, graphAdjacencyListAtom, kColorsAtom, rFactorAtom, vertexGraphAtom } from "@/lib/atoms";
 import CreateGraphRequestSerializer from "@/lib/serializers";
+import "../styles/SaveGraphVersion.css";
+import { TooltipHeaderButton } from "./ui/tooltip-header-button";
 
 const ToastConditionComponents = {
   success: {
@@ -83,7 +84,8 @@ export function SaveGraphVersion(){
   }
 
   return (
-    <Toast.Provider swipeDirection="right">
+  <>
+    <TooltipHeaderButton tooltipContent="Save graph version">
       <Button
         className="order-2 ml-auto h-8 px-2 md:order-1 md:ml-0 md:h-fit md:px-2"
         variant="outline"
@@ -92,11 +94,15 @@ export function SaveGraphVersion(){
         <Save/>
         <span className="md:sr-only">Save Graph Version</span>
       </Button>
+    </TooltipHeaderButton>
+      
+    <Toast.Provider swipeDirection="right">
       <Toast.Root className="ToastRoot bg-neutral-50 dark:bg-neutral-900 border border-emerald-200 dark:border-emerald-800" open={open} onOpenChange={setOpen}>
 				{ToastConditionComponents[isSuccess ? "success" : "failure"].title}
 				{ToastConditionComponents[isSuccess ? "success" : "failure"].description(isSuccess ? savedGraphId : JSON.stringify(error))}
 			</Toast.Root>
 			<Toast.Viewport className="ToastViewport" />
     </Toast.Provider>
+  </>
   )
 }
