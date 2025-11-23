@@ -7,7 +7,7 @@ import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import { useAtomValue } from "jotai";
 import { graphNameAtom, coloringAtom, edgeGraphAtom, graphAdjacencyListAtom, kColorsAtom, rFactorAtom, vertexGraphAtom } from "@/lib/atoms";
-import CreateGraphRequestSerializer from "@/lib/serializers";
+import {GraphSerializer} from "@/lib/serializers";
 import "../styles/SaveGraphVersion.css";
 import { TooltipHeaderButton } from "./ui/tooltip-header-button";
 
@@ -54,10 +54,10 @@ export function SaveGraphVersion(){
     mutationFn: async () => {
       const request: CreateGraphRequest = {
         name: graphName,
-        graphAdjacencyList: CreateGraphRequestSerializer.graphAdjacencyListSerializer(graphAdjacencyList),
-        vertexGraph: CreateGraphRequestSerializer.vertexGraphSerializer(vertexGraph),
-        edgeGraph: CreateGraphRequestSerializer.edgeGraphSerializer(edgeGraph),
-        localColoring: CreateGraphRequestSerializer.coloringSerializer(coloring),
+        graphAdjacencyList: GraphSerializer.graphAdjacencyListSerializer(graphAdjacencyList),
+        vertexGraph: GraphSerializer.vertexGraphSerializer(vertexGraph),
+        edgeGraph: GraphSerializer.edgeGraphSerializer(edgeGraph),
+        localColoring: GraphSerializer.coloringSerializer(coloring),
         localK: kColors,
         localR: rFactor,
       }

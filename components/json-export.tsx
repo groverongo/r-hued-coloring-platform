@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 
 import "../styles/SaveGraphVersion.css";
 import { Braces, FileJson } from "lucide-react";
-import CreateGraphRequestSerializer from "@/lib/serializers";
+import {GraphSerializer} from "@/lib/serializers";
 import { graphAdjacencyListAtom } from "@/lib/atoms";
 import { useAtomValue } from "jotai";
 import { TooltipHeaderButton } from "./ui/tooltip-header-button";
@@ -18,7 +18,7 @@ export function JSONExport({download}: {download?: boolean}){
   
   const saveAsJSON = (e: React.MouseEvent) => {
 
-    const adjacencyList = CreateGraphRequestSerializer.simpleGraphAdjacencyListSerializer(graphAdjacencyList);
+    const adjacencyList = GraphSerializer.simpleGraphAdjacencyListSerializer(graphAdjacencyList);
     const blob = new Blob([adjacencyList], {type: 'application/json'});
     
     if(download) {

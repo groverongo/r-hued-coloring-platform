@@ -5,7 +5,6 @@ import { DefaultChatTransport } from "ai";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import useSWR, { useSWRConfig } from "swr";
-import { unstable_serialize } from "swr/infinite";
 import { ChatHeader } from "@/components/chat-header";
 import {
   AlertDialog,
@@ -31,13 +30,14 @@ import { Messages } from "./messages";
 import { MultimodalInput } from "./multimodal-input";
 import { toast } from "./toast";
 import type { VisibilityType } from "./visibility-selector";
-import { QueryClientProvider } from '@tanstack/react-query'
+import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from "@/lib/queries";
 import Canvas from "./graph-canvas";
 import { ColoringParameters } from "./coloring-parameters";
 import { LPSolution } from "./linear-programming-solution";
+import { EngineProperties } from "./element-properties";
 
-export function Chat({
+export function GraphVisualize({
   id,
   initialMessages,
   initialChatModel,
@@ -46,7 +46,7 @@ export function Chat({
   autoResume,
   initialLastContext,
 }: {
-  id: string;
+  id?: string;
   initialMessages: ChatMessage[];
   initialChatModel: string;
   initialVisibilityType: VisibilityType;
@@ -55,7 +55,7 @@ export function Chat({
   initialLastContext?: AppUsage;
 }) {
   const { visibilityType } = useChatVisibility({
-    chatId: id,
+    chatId: id ?? generateUUID(),
     initialVisibilityType,
   });
 
@@ -169,10 +169,11 @@ export function Chat({
 
         <div className="flex flex-row items-stretch gap-1 sm:gap-2 flex-1 overflow-hidden">
           <div className="flex-1 flex flex-col items-center justify-center gap-1 sm:gap-2 overflow-y-auto p-4">
-            <Canvas/>
+            <Canvas id={id}/>
             <div className="flex flex-row gap-1 sm:gap-2">
               <ColoringParameters/>
               <LPSolution/> 
+              <EngineProperties/>
             </div>
           </div>
 

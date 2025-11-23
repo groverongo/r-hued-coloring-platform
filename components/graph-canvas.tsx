@@ -10,12 +10,16 @@ import TemporaryLinkG from "@/components/graphObjects/temporary_link";
 import LinkG, { LinkGRef } from "@/components/graphObjects/link";
 import { NODE_G_MODES } from "@/lib/graph-constants";
 import { isIntString } from "@/lib/utilities";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { v4 as uuidv4 } from 'uuid';
 import { coloringAtom, edgeCurrentIdAtom, edgeGraphAtom, graphAdjacencyListAtom, kColorsAtom, rFactorAtom, vertexCurrentIdAtom, vertexGraphAtom } from "@/lib/atoms";
 import { useElementRef } from "@/lib/refs";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+import { GetGraphResponse } from "@/lib/validation";
+import { GraphDeserializer } from "@/lib/serializers";
 
-export default function Canvas() {
+export default function Canvas({id}: {id?: string}) {
   const [styleProps, setStyleProps] = useState<CSSProperties>({});
 
   useEffect(() => {
@@ -27,6 +31,18 @@ export default function Canvas() {
       borderRadius: "15px",
     });
   }, []);
+
+  const {refetch, data} = useQuery({
+    queryKey: ["graph", id],
+    queryFn: async () => {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_R_HUED_COLORING_API}/graphs/${id}`)
+      return response.data as GetGraphResponse;
+    },
+    retryOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+  });
 
   const rFactor = useAtomValue(rFactorAtom);
   const kFactor = useAtomValue(kColorsAtom);
@@ -53,7 +69,26 @@ export default function Canvas() {
     y: number;
   } | null>(null);
 
+  const setKColors = useSetAtom(kColorsAtom);
+  const setRFactor = useSetAtom(rFactorAtom);
+
   const [coloring, setColoring] = useAtom(coloringAtom);
+
+  useEffect(() => {
+    if (!id) return;
+    refetch().then((response) => {
+      if(response.data === undefined) return;
+
+      
+      
+      setGraphAdjacencyList(GraphDeserializer.graphAdjacencyListDeserializer(response.data.graphAdjacencyList));
+      setVertexGraph(GraphDeserializer.vertexGraphDeserializer(response.data.vertexGraph));
+      setEdgeGraph(GraphDeserializer.edgeGraphDeserializer(response.data.edgeGraph));
+      setColoring(GraphDeserializer.coloringDeserializer(response.data.localColoring));
+      setKColors(response.data.localK);
+      setRFactor(response.data.localR);
+    });
+  }, []);
 
   const onBlur: FocusEventHandler<HTMLDivElement> = (e) => {
     setKeyDownUnblock(true);
@@ -341,6 +376,7 @@ export default function Canvas() {
               ref={(e) => {
                 vertexRefs.current?.set(key, e);
               }}
+              colorIndexInitial={coloring[key] ?? null}
               x={vertexGraph.get(key)?.x || 0}
               y={vertexGraph.get(key)?.y || 0}
               onSelect={() => {
