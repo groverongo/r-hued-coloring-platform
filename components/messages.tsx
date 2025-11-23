@@ -8,11 +8,7 @@ import type { Vote } from "@/lib/db/schema";
 import type { ChatMessage } from "@/lib/types";
 import { useDataStream } from "./data-stream-provider";
 import { Conversation, ConversationContent } from "./elements/conversation";
-import { Greeting } from "./greeting";
 import { PreviewMessage, ThinkingMessage } from "./message";
-import Canvas from "./graph-canvas";
-import { ColoringParameters } from "./coloring-parameters";
-import { LPSolution } from "./linear-programming-solution";
 
 type MessagesProps = {
   chatId: string;

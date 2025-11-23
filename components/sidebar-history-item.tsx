@@ -46,7 +46,7 @@ const PureChatItem = ({
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild isActive={isActive}>
-        <Link href={`/${graph.id}`} onClick={() => setOpenMobile(false)}>
+        <Link href={`/graph/${graph.id}`} onClick={() => setOpenMobile(false)}>
           <span>{graph.name}</span>
         </Link>
       </SidebarMenuButton>

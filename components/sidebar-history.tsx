@@ -107,6 +107,10 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_R_HUED_COLORING_API}/graphs?limit=${PAGE_SIZE}`
       );
+      if(response.data?.graphs === null) 
+        response.data.graphs = [];
+
+      console.log("Processed graphs:", response.data);
       return response.data as GraphsHistory;
     },
     refetchOnMount: false,

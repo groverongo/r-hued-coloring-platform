@@ -1,10 +1,10 @@
+import { fontSizeAtom, nodeRadiusAtom } from "@/lib/atoms";
 import {
-  FONT_SIZE,
   NODE_G_COLORS,
   NODE_G_MODES,
   NODE_G_MODES_STYLE,
-  NODE_RADIUS,
 } from "@/lib/graph-constants";
+import { useAtomValue } from "jotai";
 import Konva from "konva";
 import { Ref, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { Circle, Group, Text } from "react-konva";
@@ -27,6 +27,7 @@ export type NodeGRef = {
 
 export type NodeGProps = {
   ref?: Ref<NodeGRef>;
+  colorIndexInitial: number | null;
   x: number;
   y: number;
   onSelect?: () => void;
@@ -46,7 +47,8 @@ export default function NodeG({
   mode,
   whileDragging,
   compromised,
-  allowedColors
+  allowedColors,
+  colorIndexInitial
 }: Readonly<NodeGProps>) {
   const [isSelected, setIsSelected] = useState<boolean>(false);
   const [text, setText] = useState<string>("");
@@ -55,7 +57,10 @@ export default function NodeG({
 
   const GroupRef = useRef<Konva.Group>(null);
 
-  const [colorIndex, setColorIndex] = useState<number | null>(null);
+  const [colorIndex, setColorIndex] = useState<number | null>(colorIndexInitial);
+
+  const nodeRadius = useAtomValue(nodeRadiusAtom);
+  const fontSize = useAtomValue(fontSizeAtom);
 
   const getAbsoluteX = () => {
     return GroupRef.current ? GroupRef.current.x() + x : x;
@@ -121,7 +126,7 @@ export default function NodeG({
         <Circle
           x={x}
           y={y}
-          radius={NODE_RADIUS}
+          radius={nodeRadius}
           fill={colorIndex === null ? "black" : NODE_G_COLORS[colorIndex].hex}
           stroke={
             isSelected
@@ -134,7 +139,7 @@ export default function NodeG({
           text={mode === 0 ? text : colorIndex?.toString()}
           x={x - 5 * (mode === 0 ? text.length : colorIndex?.toString().length || 0)}
           y={y - 10}
-          fontSize={FONT_SIZE}
+          fontSize={fontSize}
           fill="white"
         />
       { mode === 1 &&
@@ -143,9 +148,9 @@ export default function NodeG({
             <Text
               key={index}
               text={color.toString()}
-              x={x + NODE_RADIUS - 15 * (colors.length - index)}
-              y={y + NODE_RADIUS + 5}
-              fontSize={FONT_SIZE / 1.3 }
+              x={x + nodeRadius - 15 * (colors.length - index)}
+              y={y + nodeRadius + 5}
+              fontSize={fontSize / 1.3 }
               fill="white"
 
             />
